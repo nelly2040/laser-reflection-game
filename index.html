@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laser Reflection Game</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <h1>Laser Reflection Game</h1>
+            <div class="game-info">
+                <span>Level: <span id="level-display">1</span></span>
+                <span>Targets: <span id="targets-display">0/0</span></span>
+            </div>
+        </header>
+        
+        <div class="toolbar">
+            <div class="tool" data-tool="mirror1">/ Mirror</div>
+            <div class="tool" data-tool="mirror2">\ Mirror</div>
+            <div class="tool" data-tool="blocker">Blocker</div>
+            <div class="tool" data-tool="erase">Erase</div>
+            <button id="fire-btn">Fire Laser</button>
+            <button id="reset-btn">Reset Level</button>
+        </div>
+        
+        <div class="game-area">
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+        </div>
+        
+        <div class="controls">
+            <button id="prev-btn">Previous Level</button>
+            <button id="next-btn">Next Level</button>
+        </div>
+    </div>
+
+    <script src="js/levels.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
