@@ -6,115 +6,173 @@
 
 body {
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
-    color: white;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #333;
     min-height: 100vh;
-    padding: 20px;
-}
-
-.game-container {
-    max-width: 900px;
-    margin: 0 auto;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 15px;
-    padding: 20px;
-    backdrop-filter: blur(10px);
-}
-
-header {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-h1 {
-    font-size: 2.5em;
-    margin-bottom: 10px;
-    background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.game-info {
     display: flex;
     justify-content: center;
-    gap: 30px;
-    font-size: 1.2em;
+    align-items: center;
+    padding: 20px;
 }
 
-.instructions {
+.container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    max-width: 700px;
+    width: 100%;
+}
+
+.game-header {
     text-align: center;
-    margin-bottom: 15px;
-    padding: 10px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    font-size: 0.9em;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #f0f0f0;
 }
 
-.instructions p {
-    margin: 5px 0;
-}
-
-button {
-    padding: 10px 20px;
-    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-    border: none;
-    border-radius: 25px;
-    color: white;
-    cursor: pointer;
-    transition: all 0.3s ease;
+.logo h1 {
+    font-size: 2.5em;
+    color: #2c3e50;
+    margin-bottom: 5px;
     font-weight: bold;
 }
 
-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+.subtitle {
+    font-size: 1.2em;
+    color: #7f8c8d;
+    font-weight: 300;
+    letter-spacing: 2px;
 }
 
-.game-area {
+.byline {
+    color: #95a5a6;
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+.game-stats {
     display: flex;
     justify-content: center;
-    margin-bottom: 20px;
+    gap: 30px;
+    margin-bottom: 25px;
 }
 
+.stat {
+    text-align: center;
+    background: #f8f9fa;
+    padding: 15px 25px;
+    border-radius: 15px;
+    border: 2px solid #e9ecef;
+}
+
+.label {
+    display: block;
+    font-size: 0.9em;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.value {
+    display: block;
+    font-size: 1.4em;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+/* CRITICAL: Make sure canvas container is visible */
+.game-board {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 25px;
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 20px;
+    border: 2px solid #e9ecef;
+}
+
+/* CRITICAL: Canvas styling */
 #gameCanvas {
-    border: 3px solid rgba(255, 255, 255, 0.3);
+    border: 3px solid #3498db;
     border-radius: 10px;
-    background: #0c0c1d;
+    background: #1a1a2e;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    display: block; /* Important: ensures canvas is visible */
 }
 
 .controls {
     display: flex;
     justify-content: center;
+    align-items: center;
     gap: 20px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
 }
 
-#prev-btn {
-    background: linear-gradient(45deg, #74b9ff, #0984e3);
+.btn {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1em;
 }
 
-#next-btn {
-    background: linear-gradient(45deg, #55efc4, #00b894);
+.laser-btn {
+    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+    color: white;
+    min-width: 140px;
 }
 
-.win-message {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.9);
-    padding: 40px;
-    border-radius: 15px;
+.laser-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+}
+
+.reset-btn {
+    background: #6c757d;
+    color: white;
+    min-width: 100px;
+}
+
+.reset-btn:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
+.nav-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.nav-btn {
+    background: #3498db;
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em;
+}
+
+.nav-btn:hover {
+    background: #2980b9;
+    transform: translateY(-2px);
+}
+
+.instructions {
     text-align: center;
-    border: 3px solid #4ecdc4;
-    z-index: 1000;
+    background: #e8f4f8;
+    padding: 15px;
+    border-radius: 10px;
+    border-left: 4px solid #3498db;
 }
 
-.win-message h2 {
-    font-size: 3em;
-    color: #4ecdc4;
-    margin-bottom: 20px;
-}
-
-.win-message button {
-    margin: 10px;
+.instructions p {
+    margin: 5px 0;
+    color: #2c3e50;
 }

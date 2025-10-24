@@ -3,38 +3,959 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laser Reflection Game</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>Laser Reflection Puzzle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: white;
+        }
+        
+        .game-container {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 900px;
+            overflow: hidden;
+        }
+        
+        .game-header {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #00a8ff;
+        }
+        
+        .game-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00a8ff;
+            text-shadow: 0 0 10px rgba(0, 168, 255, 0.7);
+        }
+        
+        .game-stats {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffcc00;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #aaa;
+        }
+        
+        .game-content {
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+        }
+        
+        .game-board {
+            flex: 1;
+            background: rgba(30, 30, 60, 0.8);
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .board-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .level-title {
+            font-size: 20px;
+            color: #ffcc00;
+        }
+        
+        .objective {
+            font-size: 14px;
+            color: #aaa;
+        }
+        
+        .board-container {
+            position: relative;
+            background: rgba(20, 20, 40, 0.9);
+            border-radius: 8px;
+            overflow: hidden;
+            aspect-ratio: 1;
+        }
+        
+        .board {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-template-rows: repeat(7, 1fr);
+            gap: 2px;
+            background: rgba(80, 80, 120, 0.8);
+            border: 2px solid rgba(100, 100, 150, 0.9);
+            padding: 2px;
+        }
+        
+        .cell {
+            background: rgba(40, 40, 80, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            border: 1px solid rgba(70, 70, 110, 0.7);
+            font-weight: bold;
+            font-size: 24px;
+        }
+        
+        .cell.wall {
+            background: rgba(60, 60, 100, 0.9);
+        }
+        
+        .mirror {
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+            cursor: grab;
+            transition: all 0.2s;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        .mirror:hover {
+            transform: scale(1.2);
+        }
+        
+        .target {
+            width: 70%;
+            height: 70%;
+            background: radial-gradient(circle, #ff33aa, #aa0077);
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ff00aa;
+        }
+        
+        .target.hit {
+            background: radial-gradient(circle, #33ff33, #009900);
+            box-shadow: 0 0 10px #00ff00;
+        }
+        
+        .laser-source {
+            width: 80%;
+            height: 80%;
+            background: #ff3300;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #ff3300;
+            position: relative;
+        }
+        
+        .laser-source::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #ff6600;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.2); opacity: 0.3; }
+            100% { transform: scale(1); opacity: 0.7; }
+        }
+        
+        .laser-beam {
+            position: absolute;
+            background: rgba(255, 50, 50, 0.7);
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .game-controls {
+            width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .control-panel {
+            background: rgba(30, 30, 60, 0.8);
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
+        .panel-title {
+            font-size: 18px;
+            color: #00a8ff;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .mirror-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .mirror-option {
+            flex: 1;
+            padding: 10px;
+            background: rgba(50, 50, 100, 0.8);
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .mirror-option:hover {
+            background: rgba(70, 70, 120, 0.8);
+        }
+        
+        .mirror-option.active {
+            background: rgba(0, 168, 255, 0.5);
+            box-shadow: 0 0 10px rgba(0, 168, 255, 0.7);
+        }
+        
+        .instructions {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #ccc;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        
+        .instructions li {
+            margin-bottom: 5px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background: #00a8ff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0090e0;
+            box-shadow: 0 0 15px rgba(0, 168, 255, 0.7);
+        }
+        
+        .btn-secondary {
+            background: #ffcc00;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e6b800;
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.7);
+        }
+        
+        .btn-reset {
+            background: #ff3333;
+            color: white;
+        }
+        
+        .btn-reset:hover {
+            background: #e60000;
+            box-shadow: 0 0 15px rgba(255, 51, 51, 0.7);
+        }
+        
+        .level-complete {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        
+        .level-complete.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .complete-message {
+            font-size: 36px;
+            color: #ffcc00;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
+        }
+        
+        .complete-stats {
+            font-size: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .controls-row {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .drag-instruction {
+            text-align: center;
+            font-size: 14px;
+            color: #ffcc00;
+            margin-top: 10px;
+        }
+        
+        .laser-direction {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            font-size: 12px;
+            color: #ff9900;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+    </style>
 </head>
 <body>
     <div class="game-container">
-        <header>
-            <h1>Laser Reflection Game</h1>
-            <div class="game-info">
-                <span>Level: <span id="level-display">1</span></span>
-                <span>Targets: <span id="targets-display">0/0</span></span>
+        <div class="game-header">
+            <div class="game-title">LASER REFLECTION PUZZLE</div>
+            <div class="game-stats">
+                <div class="stat">
+                    <div class="stat-value" id="level-display">1.1</div>
+                    <div class="stat-label">LEVEL</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="targets-display">0/3</div>
+                    <div class="stat-label">TARGETS</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="moves-display">0</div>
+                    <div class="stat-label">MOVES</div>
+                </div>
             </div>
-        </header>
-        
-        <div class="instructions">
-            <p>🎯 <strong>How to Play:</strong> Drag and drop the mirrors to redirect the laser to hit all targets!</p>
-            <p>✨ Mirrors can only be placed in the highlighted empty cells</p>
         </div>
         
-        <div class="game-area">
-            <canvas id="gameCanvas" width="800" height="600"></canvas>
-        </div>
-        
-        <div class="controls">
-            <button id="fire-btn">Fire Laser</button>
-            <button id="reset-btn">Reset Level</button>
-            <button id="prev-btn">Previous Level</button>
-            <button id="next-btn">Next Level</button>
+        <div class="game-content">
+            <div class="game-board">
+                <div class="board-header">
+                    <div class="level-title">Level <span id="level-title">1.1</span></div>
+                    <div class="objective">Redirect the laser to hit all targets</div>
+                </div>
+                
+                <div class="board-container">
+                    <div class="board" id="game-board">
+                        <!-- Game board will be generated by JavaScript -->
+                    </div>
+                    <div class="level-complete" id="level-complete">
+                        <div class="complete-message">LEVEL COMPLETE!</div>
+                        <div class="complete-stats">
+                            <div>Targets hit: <span id="targets-hit">3</span>/<span id="targets-total">3</span></div>
+                            <div>Moves used: <span id="moves-used">5</span></div>
+                        </div>
+                        <div class="controls-row">
+                            <button class="btn btn-secondary" id="next-level">NEXT LEVEL</button>
+                            <button class="btn btn-reset" id="play-again">PLAY AGAIN</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="drag-instruction">Drag mirrors to change the laser path</div>
+            </div>
+            
+            <div class="game-controls">
+                <div class="control-panel">
+                    <div class="panel-title">LASER CONTROL</div>
+                    <button class="btn btn-primary" id="step-laser" style="width: 100%; margin-bottom: 10px;">FIRE LASER</button>
+                    <button class="btn btn-secondary" id="auto-laser" style="width: 100%;">AUTO LASER (ON)</button>
+                </div>
+                
+                <div class="control-panel">
+                    <div class="panel-title">MIRROR TYPE</div>
+                    <div class="mirror-selector">
+                        <div class="mirror-option active" data-type="forward">
+                            <div>/</div>
+                            <div>Forward</div>
+                        </div>
+                        <div class="mirror-option" data-type="backward">
+                            <div>\</div>
+                            <div>Backward</div>
+                        </div>
+                    </div>
+                    <div class="instructions">
+                        <p><strong>How to Play:</strong></p>
+                        <ul>
+                            <li>Drag mirrors to empty cells</li>
+                            <li>Click "FIRE LASER" to test your solution</li>
+                            <li>With AUTO LASER ON, the laser updates automatically</li>
+                            <li>Hit all targets to complete the level</li>
+                            <li>Use as few moves as possible</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="control-panel">
+                    <div class="panel-title">CONTROLS</div>
+                    <button class="btn btn-secondary" id="reset-level" style="width: 100%; margin-bottom: 10px;">RESET LEVEL</button>
+                    <div class="controls-row">
+                        <button class="btn btn-secondary" id="prev-level">PREV</button>
+                        <button class="btn btn-secondary" id="next-level-btn">NEXT</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script src="js/levels.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/game.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Game state
+            const gameState = {
+                currentLevel: 1,
+                levels: [
+                    {
+                        // Level 1.1
+                        grid: [
+                            [1, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0]
+                        ],
+                        laser: { row: 0, col: 0, direction: 'right' },
+                        targets: [{ row: 3, col: 6 }, { row: 6, col: 3 }],
+                        mirrors: [
+                            { row: 2, col: 2, type: 'forward' },
+                            { row: 2, col: 4, type: 'backward' },
+                            { row: 4, col: 4, type: 'forward' },
+                            { row: 4, col: 2, type: 'backward' }
+                        ],
+                        movableMirrors: 4
+                    },
+                    {
+                        // Level 1.2
+                        grid: [
+                            [0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0],
+                            [1, 0, 0, 0, 0, 0, 0]
+                        ],
+                        laser: { row: 6, col: 0, direction: 'right' },
+                        targets: [{ row: 0, col: 3 }, { row: 3, col: 6 }, { row: 6, col: 3 }],
+                        mirrors: [
+                            { row: 1, col: 2, type: 'forward' },
+                            { row: 2, col: 4, type: 'backward' },
+                            { row: 4, col: 4, type: 'forward' },
+                            { row: 5, col: 2, type: 'backward' }
+                        ],
+                        movableMirrors: 4
+                    },
+                    {
+                        // Level 1.3
+                        grid: [
+                            [0, 0, 0, 0, 0, 0, 1],
+                            [0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0, 0]
+                        ],
+                        laser: { row: 0, col: 6, direction: 'down' },
+                        targets: [{ row: 3, col: 0 }, { row: 3, col: 3 }, { row: 6, col: 6 }],
+                        mirrors: [
+                            { row: 1, col: 4, type: 'backward' },
+                            { row: 2, col: 2, type: 'forward' },
+                            { row: 4, col: 2, type: 'backward' },
+                            { row: 5, col: 4, type: 'forward' }
+                        ],
+                        movableMirrors: 4
+                    }
+                ],
+                moves: 0,
+                selectedMirrorType: 'forward',
+                placedMirrors: [],
+                laserPath: [],
+                autoLaser: true
+            };
+
+            // DOM elements
+            const gameBoard = document.getElementById('game-board');
+            const levelDisplay = document.getElementById('level-display');
+            const targetsDisplay = document.getElementById('targets-display');
+            const movesDisplay = document.getElementById('moves-display');
+            const levelTitle = document.getElementById('level-title');
+            const stepLaserBtn = document.getElementById('step-laser');
+            const autoLaserBtn = document.getElementById('auto-laser');
+            const resetLevelBtn = document.getElementById('reset-level');
+            const prevLevelBtn = document.getElementById('prev-level');
+            const nextLevelBtn = document.getElementById('next-level-btn');
+            const levelComplete = document.getElementById('level-complete');
+            const nextLevelCompleteBtn = document.getElementById('next-level');
+            const playAgainBtn = document.getElementById('play-again');
+            const targetsHit = document.getElementById('targets-hit');
+            const targetsTotal = document.getElementById('targets-total');
+            const movesUsed = document.getElementById('moves-used');
+            const mirrorOptions = document.querySelectorAll('.mirror-option');
+
+            // Initialize the game
+            function initGame() {
+                renderBoard();
+                updateDisplay();
+                setupEventListeners();
+                if (gameState.autoLaser) {
+                    calculateAndDrawLaser();
+                }
+            }
+
+            // Render the game board
+            function renderBoard() {
+                gameBoard.innerHTML = '';
+                const level = gameState.levels[gameState.currentLevel - 1];
+                
+                // Create cells
+                for (let row = 0; row < 7; row++) {
+                    for (let col = 0; col < 7; col++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        cell.dataset.row = row;
+                        cell.dataset.col = col;
+                        
+                        // Add laser source with direction indicator
+                        if (row === level.laser.row && col === level.laser.col) {
+                            const laser = document.createElement('div');
+                            laser.className = 'laser-source';
+                            
+                            const directionIndicator = document.createElement('div');
+                            directionIndicator.className = 'laser-direction';
+                            directionIndicator.textContent = level.laser.direction.toUpperCase();
+                            
+                            cell.appendChild(laser);
+                            cell.appendChild(directionIndicator);
+                        }
+                        
+                        // Add targets
+                        const target = level.targets.find(t => t.row === row && t.col === col);
+                        if (target) {
+                            const targetEl = document.createElement('div');
+                            targetEl.className = 'target';
+                            targetEl.dataset.target = 'true';
+                            cell.appendChild(targetEl);
+                        }
+                        
+                        // Add mirrors
+                        const mirror = level.mirrors.find(m => m.row === row && m.col === col);
+                        if (mirror) {
+                            const mirrorEl = document.createElement('div');
+                            mirrorEl.className = 'mirror';
+                            mirrorEl.textContent = mirror.type === 'forward' ? '/' : '\\';
+                            mirrorEl.dataset.mirror = 'true';
+                            mirrorEl.dataset.type = mirror.type;
+                            mirrorEl.draggable = true;
+                            cell.appendChild(mirrorEl);
+                        }
+                        
+                        // Add placed mirrors
+                        const placedMirror = gameState.placedMirrors.find(m => m.row === row && m.col === col);
+                        if (placedMirror) {
+                            const mirrorEl = document.createElement('div');
+                            mirrorEl.className = 'mirror';
+                            mirrorEl.textContent = placedMirror.type === 'forward' ? '/' : '\\';
+                            mirrorEl.dataset.mirror = 'true';
+                            mirrorEl.dataset.type = placedMirror.type;
+                            mirrorEl.draggable = true;
+                            cell.appendChild(mirrorEl);
+                        }
+                        
+                        gameBoard.appendChild(cell);
+                    }
+                }
+                
+                // Add drag and drop functionality
+                setupDragAndDrop();
+            }
+
+            // Set up drag and drop for mirrors
+            function setupDragAndDrop() {
+                const mirrors = document.querySelectorAll('[data-mirror="true"]');
+                const cells = document.querySelectorAll('.cell');
+                
+                mirrors.forEach(mirror => {
+                    mirror.addEventListener('dragstart', handleDragStart);
+                });
+                
+                cells.forEach(cell => {
+                    cell.addEventListener('dragover', handleDragOver);
+                    cell.addEventListener('drop', handleDrop);
+                });
+            }
+
+            function handleDragStart(e) {
+                const mirror = e.target;
+                const cell = mirror.parentElement;
+                e.dataTransfer.setData('text/plain', JSON.stringify({
+                    row: parseInt(cell.dataset.row),
+                    col: parseInt(cell.dataset.col),
+                    type: mirror.dataset.type
+                }));
+            }
+
+            function handleDragOver(e) {
+                e.preventDefault();
+            }
+
+            function handleDrop(e) {
+                e.preventDefault();
+                const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                const cell = e.target.closest('.cell');
+                
+                if (!cell || cell.querySelector('[data-mirror="true"]')) return;
+                
+                // Remove mirror from original position
+                const level = gameState.levels[gameState.currentLevel - 1];
+                const mirrorIndex = level.mirrors.findIndex(m => 
+                    m.row === data.row && m.col === data.col);
+                
+                if (mirrorIndex !== -1) {
+                    level.mirrors[mirrorIndex].row = parseInt(cell.dataset.row);
+                    level.mirrors[mirrorIndex].col = parseInt(cell.dataset.col);
+                } else {
+                    const placedIndex = gameState.placedMirrors.findIndex(m => 
+                        m.row === data.row && m.col === data.col);
+                    
+                    if (placedIndex !== -1) {
+                        gameState.placedMirrors[placedIndex].row = parseInt(cell.dataset.row);
+                        gameState.placedMirrors[placedIndex].col = parseInt(cell.dataset.col);
+                    }
+                }
+                
+                gameState.moves++;
+                renderBoard();
+                updateDisplay();
+                
+                // Auto-update laser if enabled
+                if (gameState.autoLaser) {
+                    calculateAndDrawLaser();
+                }
+            }
+
+            // Calculate laser path and draw it
+            function calculateAndDrawLaser() {
+                const path = calculateLaserPath();
+                drawLaserBeam(path);
+                
+                if (checkLevelComplete()) {
+                    targetsHit.textContent = document.querySelectorAll('.target.hit').length;
+                    targetsTotal.textContent = gameState.levels[gameState.currentLevel - 1].targets.length;
+                    movesUsed.textContent = gameState.moves;
+                    levelComplete.classList.add('show');
+                }
+                
+                updateDisplay();
+            }
+
+            // Calculate laser path
+            function calculateLaserPath() {
+                const level = gameState.levels[gameState.currentLevel - 1];
+                const path = [];
+                let row = level.laser.row;
+                let col = level.laser.col;
+                let direction = level.laser.direction;
+                
+                // Clear previous hits
+                document.querySelectorAll('.target').forEach(target => {
+                    target.classList.remove('hit');
+                });
+                
+                // Follow the laser path
+                while (row >= 0 && row < 7 && col >= 0 && col < 7) {
+                    path.push({ row, col, direction });
+                    
+                    // Check if we hit a target
+                    const target = level.targets.find(t => t.row === row && t.col === col);
+                    if (target) {
+                        const targetEl = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"] .target`);
+                        if (targetEl) targetEl.classList.add('hit');
+                    }
+                    
+                    // Check for mirrors
+                    const mirror = [...level.mirrors, ...gameState.placedMirrors].find(m => m.row === row && m.col === col);
+                    if (mirror) {
+                        direction = reflectLaser(direction, mirror.type);
+                    }
+                    
+                    // Move to next cell
+                    switch (direction) {
+                        case 'right': col++; break;
+                        case 'left': col--; break;
+                        case 'down': row++; break;
+                        case 'up': row--; break;
+                    }
+                    
+                    // Check if we're going out of bounds
+                    if (row < 0 || row >= 7 || col < 0 || col >= 7) {
+                        path.push({ row, col, direction });
+                        break;
+                    }
+                }
+                
+                return path;
+            }
+
+            // Reflect laser based on mirror type
+            function reflectLaser(direction, mirrorType) {
+                if (mirrorType === 'forward') {
+                    switch (direction) {
+                        case 'right': return 'up';
+                        case 'left': return 'down';
+                        case 'down': return 'left';
+                        case 'up': return 'right';
+                    }
+                } else { // backward mirror
+                    switch (direction) {
+                        case 'right': return 'down';
+                        case 'left': return 'up';
+                        case 'down': return 'right';
+                        case 'up': return 'left';
+                    }
+                }
+            }
+
+            // Draw laser beam
+            function drawLaserBeam(path) {
+                // Remove previous laser beams
+                document.querySelectorAll('.laser-beam').forEach(beam => beam.remove());
+                
+                // Draw new laser beams
+                for (let i = 0; i < path.length - 1; i++) {
+                    const current = path[i];
+                    const next = path[i + 1];
+                    
+                    const beam = document.createElement('div');
+                    beam.className = 'laser-beam';
+                    
+                    if (current.direction === 'right' || current.direction === 'left') {
+                        beam.style.height = '4px';
+                        beam.style.width = 'calc(100% / 7)';
+                        beam.style.top = `calc(${current.row} * (100% / 7) + calc(100% / 14) - 2px)`;
+                        
+                        if (current.direction === 'right') {
+                            beam.style.left = `calc(${current.col} * (100% / 7) + (100% / 14))`;
+                        } else {
+                            beam.style.left = `calc(${current.col} * (100% / 7) - (100% / 14))`;
+                        }
+                    } else {
+                        beam.style.width = '4px';
+                        beam.style.height = 'calc(100% / 7)';
+                        beam.style.left = `calc(${current.col} * (100% / 7) + calc(100% / 14) - 2px)`;
+                        
+                        if (current.direction === 'down') {
+                            beam.style.top = `calc(${current.row} * (100% / 7) + (100% / 14))`;
+                        } else {
+                            beam.style.top = `calc(${current.row} * (100% / 7) - (100% / 14))`;
+                        }
+                    }
+                    
+                    document.querySelector('.board-container').appendChild(beam);
+                }
+            }
+
+            // Check if all targets are hit
+            function checkLevelComplete() {
+                const level = gameState.levels[gameState.currentLevel - 1];
+                const hitTargets = document.querySelectorAll('.target.hit').length;
+                return hitTargets === level.targets.length;
+            }
+
+            // Update display
+            function updateDisplay() {
+                const level = gameState.levels[gameState.currentLevel - 1];
+                levelDisplay.textContent = `1.${gameState.currentLevel}`;
+                levelTitle.textContent = `1.${gameState.currentLevel}`;
+                
+                const hitTargets = document.querySelectorAll('.target.hit').length;
+                targetsDisplay.textContent = `${hitTargets}/${level.targets.length}`;
+                
+                movesDisplay.textContent = gameState.moves;
+            }
+
+            // Set up event listeners
+            function setupEventListeners() {
+                stepLaserBtn.addEventListener('click', function() {
+                    calculateAndDrawLaser();
+                });
+                
+                autoLaserBtn.addEventListener('click', function() {
+                    gameState.autoLaser = !gameState.autoLaser;
+                    autoLaserBtn.textContent = gameState.autoLaser ? 'AUTO LASER (ON)' : 'AUTO LASER (OFF)';
+                    
+                    if (gameState.autoLaser) {
+                        calculateAndDrawLaser();
+                    } else {
+                        document.querySelectorAll('.laser-beam').forEach(beam => beam.remove());
+                        document.querySelectorAll('.target.hit').forEach(target => target.classList.remove('hit'));
+                        updateDisplay();
+                    }
+                });
+                
+                resetLevelBtn.addEventListener('click', function() {
+                    gameState.moves = 0;
+                    gameState.placedMirrors = [];
+                    renderBoard();
+                    updateDisplay();
+                    document.querySelectorAll('.laser-beam').forEach(beam => beam.remove());
+                    
+                    if (gameState.autoLaser) {
+                        calculateAndDrawLaser();
+                    }
+                });
+                
+                prevLevelBtn.addEventListener('click', function() {
+                    if (gameState.currentLevel > 1) {
+                        gameState.currentLevel--;
+                        gameState.moves = 0;
+                        gameState.placedMirrors = [];
+                        renderBoard();
+                        updateDisplay();
+                        document.querySelectorAll('.laser-beam').forEach(beam => beam.remove());
+                        levelComplete.classList.remove('show');
+                        
+                        if (gameState.autoLaser) {
+                            calculateAndDrawLaser();
+                        }
+                    }
+                });
+                
+                nextLevelBtn.addEventListener('click', function() {
+                    if (gameState.currentLevel < gameState.levels.length) {
+                        gameState.currentLevel++;
+                        gameState.moves = 0;
+                        gameState.placedMirrors = [];
+                        renderBoard();
+                        updateDisplay();
+                        document.querySelectorAll('.laser-beam').forEach(beam => beam.remove());
+                        levelComplete.classList.remove('show');
+                        
+                        if (gameState.autoLaser) {
+                            calculateAndDrawLaser();
+                        }
+                    }
+                });
+                
+                nextLevelCompleteBtn.addEventListener('click', function() {
+                    if (gameState.currentLevel < gameState.levels.length) {
+                        gameState.currentLevel++;
+                        gameState.moves = 0;
+                        gameState.placedMirrors = [];
+                        renderBoard();
+                        updateDisplay();
+                        levelComplete.classList.remove('show');
+                        
+                        if (gameState.autoLaser) {
+                            calculateAndDrawLaser();
+                        }
+                    } else {
+                        levelComplete.classList.remove('show');
+                    }
+                });
+                
+                playAgainBtn.addEventListener('click', function() {
+                    gameState.moves = 0;
+                    gameState.placedMirrors = [];
+                    renderBoard();
+                    updateDisplay();
+                    levelComplete.classList.remove('show');
+                    
+                    if (gameState.autoLaser) {
+                        calculateAndDrawLaser();
+                    }
+                });
+                
+                mirrorOptions.forEach(option => {
+                    option.addEventListener('click', function() {
+                        mirrorOptions.forEach(opt => opt.classList.remove('active'));
+                        this.classList.add('active');
+                        gameState.selectedMirrorType = this.dataset.type;
+                    });
+                });
+                
+                // Allow adding new mirrors by clicking on empty cells
+                gameBoard.addEventListener('click', function(e) {
+                    const cell = e.target.closest('.cell');
+                    if (!cell || cell.querySelector('[data-mirror="true"]') || 
+                        cell.querySelector('.laser-source') || cell.querySelector('.target')) return;
+                    
+                    const row = parseInt(cell.dataset.row);
+                    const col = parseInt(cell.dataset.col);
+                    
+                    // Check if we've reached the mirror limit
+                    const level = gameState.levels[gameState.currentLevel - 1];
+                    if (gameState.placedMirrors.length >= level.movableMirrors) return;
+                    
+                    gameState.placedMirrors.push({
+                        row: row,
+                        col: col,
+                        type: gameState.selectedMirrorType
+                    });
+                    
+                    gameState.moves++;
+                    renderBoard();
+                    updateDisplay();
+                    
+                    // Auto-update laser if enabled
+                    if (gameState.autoLaser) {
+                        calculateAndDrawLaser();
+                    }
+                });
+            }
+
+            // Start the game
+            initGame();
+        });
+    </script>
 </body>
 </html>

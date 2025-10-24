@@ -4,28 +4,35 @@ class LaserGame {
         this.ctx = this.canvas.getContext('2d');
         this.currentLevel = 0;
         this.isFiring = false;
-        this.laserPath = [];
+        this.laserPaths = [];
         this.hitTargets = new Set();
+        this.moveCount = 0;
         
         this.movableMirrors = [];
         this.fixedBlockers = new Set();
         this.emptyCells = new Set();
         
         this.selectedMirror = null;
+        this.isDragging = false;
         this.dragOffset = { x: 0, y: 0 };
         this.cellSize = 0;
         
+        console.log("Game initializing...");
+        
         this.init();
-        this.loadLevel(this.currentLevel);
     }
     
     init() {
+        console.log("Setting up game...");
         this.setupEventListeners();
+        this.loadLevel(this.currentLevel);
         this.gameLoop();
     }
     
     setupEventListeners() {
-        // Canvas interactions for dragging mirrors
+        console.log("Setting up event listeners...");
+        
+        // Canvas interactions
         this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
         this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
         this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
@@ -35,139 +42,185 @@ class LaserGame {
         document.getElementById('reset-btn').addEventListener('click', () => this.resetLevel());
         document.getElementById('prev-btn').addEventListener('click', () => this.previousLevel());
         document.getElementById('next-btn').addEventListener('click', () => this.nextLevel());
+        
+        console.log("Event listeners set up");
     }
     
     loadLevel(levelIndex) {
+        console.log("Loading level", levelIndex);
+        
         this.currentLevel = levelIndex;
         this.movableMirrors = [];
         this.fixedBlockers = new Set();
         this.emptyCells = new Set();
         this.hitTargets.clear();
         this.isFiring = false;
-        this.laserPath = [];
+        this.laserPaths = [];
+        this.moveCount = 0;
         this.selectedMirror = null;
+        this.isDragging = false;
         
         const level = LEVELS[levelIndex];
         this.level = level;
         this.cellSize = this.canvas.width / level.gridSize;
         
-        // Load movable mirrors
+        // Load level data
         this.movableMirrors = JSON.parse(JSON.stringify(level.movableMirrors));
         
-        // Load fixed blockers
         level.fixedBlockers.forEach(blocker => {
             this.fixedBlockers.add(`${blocker.x},${blocker.y}`);
         });
         
-        // Load empty cells
         level.emptyCells.forEach(cell => {
             this.emptyCells.add(`${cell.x},${cell.y}`);
         });
         
         this.updateUI();
         this.draw();
+        
+        console.log("Level loaded successfully");
+    }
+    
+    getMousePos(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        return {
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top
+        };
     }
     
     handleMouseDown(e) {
         if (this.isFiring) return;
         
-        const cell = getCellFromCoordinates(this.canvas, e.clientX, e.clientY, this.level.gridSize);
+        const mousePos = this.getMousePos(e);
+        const cell = this.getCellFromPixel(mousePos.x, mousePos.y);
         
         if (cell.x < 0 || cell.x >= this.level.gridSize || 
             cell.y < 0 || cell.y >= this.level.gridSize) return;
         
-        // Check if clicking on a movable mirror
         const clickedMirror = this.movableMirrors.find(mirror => 
             mirror.x === cell.x && mirror.y === cell.y
         );
         
         if (clickedMirror) {
             this.selectedMirror = clickedMirror;
-            const centerX = (cell.x + 0.5) * this.cellSize;
-            const centerY = (cell.y + 0.5) * this.cellSize;
-            this.dragOffset.x = centerX - e.clientX + this.canvas.getBoundingClientRect().left;
-            this.dragOffset.y = centerY - e.clientY + this.canvas.getBoundingClientRect().top;
+            this.isDragging = true;
+            
+            const mirrorCenterX = (clickedMirror.x + 0.5) * this.cellSize;
+            const mirrorCenterY = (clickedMirror.y + 0.5) * this.cellSize;
+            this.dragOffset.x = mirrorCenterX - mousePos.x;
+            this.dragOffset.y = mirrorCenterY - mousePos.y;
         }
     }
     
     handleMouseMove(e) {
-        if (!this.selectedMirror || this.isFiring) return;
+        if (!this.isDragging || !this.selectedMirror || this.isFiring) return;
         
-        const rect = this.canvas.getBoundingClientRect();
-        const cellSize = this.canvas.width / this.level.gridSize;
-        const gridX = Math.floor((e.clientX - rect.left + this.dragOffset.x) / cellSize);
-        const gridY = Math.floor((e.clientY - rect.top + this.dragOffset.y) / cellSize);
-        
-        // Only allow moving to empty cells
-        if (gridX >= 0 && gridX < this.level.gridSize && 
-            gridY >= 0 && gridY < this.level.gridSize &&
-            this.isEmptyCell(gridX, gridY)) {
-            
-            this.selectedMirror.x = gridX;
-            this.selectedMirror.y = gridY;
-        }
-        
-        this.draw();
+        const mousePos = this.getMousePos(e);
+        this.updateMirrorPosition(mousePos.x, mousePos.y);
     }
     
     handleMouseUp(e) {
+        if (this.isDragging && this.selectedMirror) {
+            const mousePos = this.getMousePos(e);
+            this.updateMirrorPosition(mousePos.x, mousePos.y, true);
+            this.moveCount++;
+            this.updateUI();
+        }
+        this.isDragging = false;
         this.selectedMirror = null;
+    }
+    
+    updateMirrorPosition(pixelX, pixelY, isFinal = false) {
+        let gridX = Math.floor((pixelX + this.dragOffset.x) / this.cellSize);
+        let gridY = Math.floor((pixelY + this.dragOffset.y) / this.cellSize);
+        
+        gridX = Math.max(0, Math.min(this.level.gridSize - 1, gridX));
+        gridY = Math.max(0, Math.min(this.level.gridSize - 1, gridY));
+        
+        if (this.isEmptyCell(gridX, gridY)) {
+            this.selectedMirror.x = gridX;
+            this.selectedMirror.y = gridY;
+        }
+    }
+    
+    getCellFromPixel(pixelX, pixelY) {
+        const gridX = Math.floor(pixelX / this.cellSize);
+        const gridY = Math.floor(pixelY / this.cellSize);
+        return { x: gridX, y: gridY };
     }
     
     isEmptyCell(x, y) {
         const cellKey = `${x},${y}`;
         
-        // Check if cell is empty AND not occupied by another mirror
-        const isOccupiedByMirror = this.movableMirrors.some(mirror => 
+        if (!this.emptyCells.has(cellKey)) return false;
+        
+        const isOccupiedByOtherMirror = this.movableMirrors.some(mirror => 
             mirror.x === x && mirror.y === y && mirror !== this.selectedMirror
         );
         
-        return this.emptyCells.has(cellKey) && !isOccupiedByMirror &&
-               !this.fixedBlockers.has(cellKey) &&
-               !(this.level.laser.x === x && this.level.laser.y === y) &&
-               !this.level.targets.some(target => target.x === x && target.y === y);
+        const hasLaser = this.level.lasers.some(laser => 
+            laser.x === x && laser.y === y
+        );
+        
+        const hasBlocker = this.fixedBlockers.has(cellKey);
+        const hasTarget = this.level.targets.some(target => 
+            target.x === x && target.y === y
+        );
+        
+        return !isOccupiedByOtherMirror && !hasLaser && !hasBlocker && !hasTarget;
     }
     
     fireLaser() {
         if (this.isFiring) return;
         
         this.isFiring = true;
-        this.laserPath = [];
+        this.laserPaths = [];
         this.hitTargets.clear();
         
-        let currentPos = new Vector(this.level.laser.x, this.level.laser.y);
-        let currentDir = this.level.laser.direction;
+        this.level.lasers.forEach((laser, laserIndex) => {
+            this.fireSingleLaser(laser, laserIndex);
+        });
         
-        this.laserPath.push({ ...currentPos, direction: currentDir });
+        setTimeout(() => {
+            this.isFiring = false;
+            if (this.hitTargets.size === this.level.targets.length) {
+                this.showWinMessage();
+            }
+        }, 2000);
+    }
+    
+    fireSingleLaser(laser, laserIndex) {
+        let currentPos = new Vector(laser.x, laser.y);
+        let currentDir = laser.direction;
         
-        const maxSteps = this.level.gridSize * this.level.gridSize * 2;
+        const laserPath = [];
+        laserPath.push({ ...currentPos, direction: currentDir, laserIndex });
+        
+        const maxSteps = 100;
         let steps = 0;
         
         while (steps < maxSteps) {
             const nextPos = currentPos.add(DIRECTIONS[currentDir]);
             
-            // Check bounds
             if (nextPos.x < 0 || nextPos.x >= this.level.gridSize ||
                 nextPos.y < 0 || nextPos.y >= this.level.gridSize) {
                 break;
             }
             
-            this.laserPath.push({ ...nextPos, direction: currentDir });
+            laserPath.push({ ...nextPos, direction: currentDir, laserIndex });
             
             const cellKey = `${nextPos.x},${nextPos.y}`;
             
-            // Check for fixed blockers
             if (this.fixedBlockers.has(cellKey)) {
                 break;
             }
             
-            // Check for mirrors (both types)
             const mirror = this.movableMirrors.find(m => m.x === nextPos.x && m.y === nextPos.y);
             if (mirror) {
                 currentDir = MIRROR_REFLECTIONS[mirror.type][currentDir];
             }
             
-            // Check for targets
             this.level.targets.forEach((target, index) => {
                 if (nextPos.x === target.x && nextPos.y === target.y) {
                     this.hitTargets.add(index);
@@ -178,36 +231,12 @@ class LaserGame {
             steps++;
         }
         
-        this.draw();
-        
-        // Check win condition
-        if (this.hitTargets.size === this.level.targets.length) {
-            setTimeout(() => this.showWinMessage(), 500);
-        }
-        
-        setTimeout(() => {
-            this.isFiring = false;
-        }, 2000);
+        this.laserPaths.push(laserPath);
     }
     
     showWinMessage() {
-        const message = document.createElement('div');
-        message.className = 'win-message';
-        message.innerHTML = `
-            <h2>Level Complete!</h2>
-            <p>All targets hit! Great job!</p>
-            ${this.currentLevel < LEVELS.length - 1 ? 
-                '<button onclick="game.nextLevel()">Next Level</button>' : 
-                '<button onclick="game.resetGame()">Play Again</button>'
-            }
-        `;
-        document.body.appendChild(message);
-        
-        setTimeout(() => {
-            if (document.body.contains(message)) {
-                document.body.removeChild(message);
-            }
-        }, 5000);
+        alert(`🎉 Level Complete! 🎉\nMoves: ${this.moveCount}\n\nClick OK for next level`);
+        this.nextLevel();
     }
     
     resetLevel() {
@@ -223,25 +252,27 @@ class LaserGame {
     nextLevel() {
         if (this.currentLevel < LEVELS.length - 1) {
             this.loadLevel(this.currentLevel + 1);
+        } else {
+            alert("🎊 You've completed all levels! 🎊");
+            this.loadLevel(0);
         }
-    }
-    
-    resetGame() {
-        this.loadLevel(0);
     }
     
     updateUI() {
         document.getElementById('level-display').textContent = this.currentLevel + 1;
         document.getElementById('targets-display').textContent = 
             `${this.hitTargets.size}/${this.level.targets.length}`;
+        document.getElementById('moves-display').textContent = this.moveCount;
     }
     
     draw() {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        // Clear canvas with dark background
+        this.ctx.fillStyle = '#1a1a2e';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
         this.drawGrid();
         this.drawEmptyCells();
         this.drawObjects();
-        this.updateUI();
     }
     
     drawGrid() {
@@ -249,13 +280,11 @@ class LaserGame {
         this.ctx.lineWidth = 1;
         
         for (let i = 0; i <= this.level.gridSize; i++) {
-            // Vertical lines
             this.ctx.beginPath();
             this.ctx.moveTo(i * this.cellSize, 0);
             this.ctx.lineTo(i * this.cellSize, this.canvas.height);
             this.ctx.stroke();
             
-            // Horizontal lines
             this.ctx.beginPath();
             this.ctx.moveTo(0, i * this.cellSize);
             this.ctx.lineTo(this.canvas.width, i * this.cellSize);
@@ -264,26 +293,17 @@ class LaserGame {
     }
     
     drawEmptyCells() {
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
         this.emptyCells.forEach(cellKey => {
             const [x, y] = cellKey.split(',').map(Number);
-            const centerX = (x + 0.5) * this.cellSize;
-            const centerY = (y + 0.5) * this.cellSize;
-            
-            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
             this.ctx.fillRect(x * this.cellSize, y * this.cellSize, this.cellSize, this.cellSize);
-            
-            // Draw subtle dot to indicate movable area
-            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-            this.ctx.beginPath();
-            this.ctx.arc(centerX, centerY, 2, 0, Math.PI * 2);
-            this.ctx.fill();
         });
     }
     
     drawObjects() {
         this.drawFixedBlockers();
-        this.drawMovableMirrors();
         this.drawTargets();
+        this.drawMovableMirrors();
         this.drawLaserSource();
         
         if (this.isFiring) {
@@ -292,25 +312,25 @@ class LaserGame {
     }
     
     drawLaserSource() {
-        const { x, y, direction } = this.level.laser;
-        const centerX = (x + 0.5) * this.cellSize;
-        const centerY = (y + 0.5) * this.cellSize;
-        
-        // Laser base
-        this.ctx.fillStyle = '#ff6b6b';
-        this.ctx.beginPath();
-        this.ctx.arc(centerX, centerY, this.cellSize * 0.3, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        // Direction indicator
-        this.ctx.strokeStyle = '#ff6b6b';
-        this.ctx.lineWidth = 3;
-        this.ctx.beginPath();
-        this.ctx.moveTo(centerX, centerY);
-        
-        const dirVec = DIRECTIONS[direction].multiply(this.cellSize * 0.4);
-        this.ctx.lineTo(centerX + dirVec.x, centerY + dirVec.y);
-        this.ctx.stroke();
+        this.level.lasers.forEach((laser, index) => {
+            const { x, y, direction } = laser;
+            const centerX = (x + 0.5) * this.cellSize;
+            const centerY = (y + 0.5) * this.cellSize;
+            
+            this.ctx.fillStyle = '#ff6b6b';
+            this.ctx.beginPath();
+            this.ctx.arc(centerX, centerY, this.cellSize * 0.3, 0, Math.PI * 2);
+            this.ctx.fill();
+            
+            this.ctx.strokeStyle = '#ff0000';
+            this.ctx.lineWidth = 3;
+            this.ctx.beginPath();
+            this.ctx.moveTo(centerX, centerY);
+            
+            const dirVec = DIRECTIONS[direction].multiply(this.cellSize * 0.4);
+            this.ctx.lineTo(centerX + dirVec.x, centerY + dirVec.y);
+            this.ctx.stroke();
+        });
     }
     
     drawTargets() {
@@ -319,17 +339,8 @@ class LaserGame {
             const centerY = (target.y + 0.5) * this.cellSize;
             const isHit = this.hitTargets.has(index);
             
-            const colors = ['#74b9ff', '#55efc4', '#a29bfe', '#fd79a8'];
-            const color = isHit ? '#00ff00' : colors[index % colors.length];
-            
+            const color = isHit ? '#00ff00' : '#74b9ff';
             drawPlanet(this.ctx, centerX, centerY, this.cellSize * 0.3, color);
-            
-            if (isHit) {
-                this.ctx.fillStyle = 'rgba(0, 255, 0, 0.3)';
-                this.ctx.beginPath();
-                this.ctx.arc(centerX, centerY, this.cellSize * 0.5, 0, Math.PI * 2);
-                this.ctx.fill();
-            }
         });
     }
     
@@ -340,7 +351,6 @@ class LaserGame {
             
             const isSelected = this.selectedMirror === mirror;
             
-            // Highlight selected mirror
             if (isSelected) {
                 this.ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
                 this.ctx.fillRect(
@@ -356,10 +366,10 @@ class LaserGame {
             this.ctx.lineCap = 'round';
             
             this.ctx.beginPath();
-            if (mirror.type === 'mirror1') { // /
+            if (mirror.type === 'mirror1') {
                 this.ctx.moveTo(centerX - this.cellSize * 0.35, centerY + this.cellSize * 0.35);
                 this.ctx.lineTo(centerX + this.cellSize * 0.35, centerY - this.cellSize * 0.35);
-            } else { // \
+            } else {
                 this.ctx.moveTo(centerX - this.cellSize * 0.35, centerY - this.cellSize * 0.35);
                 this.ctx.lineTo(centerX + this.cellSize * 0.35, centerY + this.cellSize * 0.35);
             }
@@ -377,42 +387,36 @@ class LaserGame {
             this.ctx.beginPath();
             this.ctx.arc(centerX, centerY, this.cellSize * 0.25, 0, Math.PI * 2);
             this.ctx.fill();
-            
-            this.ctx.strokeStyle = '#2d3436';
-            this.ctx.lineWidth = 2;
-            this.ctx.beginPath();
-            this.ctx.arc(centerX, centerY, this.cellSize * 0.25, 0, Math.PI * 2);
-            this.ctx.stroke();
         });
     }
     
     drawLaserPath() {
-        if (this.laserPath.length < 2) return;
+        if (!this.laserPaths || this.laserPaths.length === 0) return;
         
-        this.ctx.strokeStyle = '#ff6b6b';
-        this.ctx.lineWidth = 3;
-        this.ctx.lineCap = 'round';
+        const laserColors = ['#ff6b6b', '#74b9ff', '#55efc4'];
         
-        // Draw laser beam with glow effect
-        this.ctx.shadowColor = '#ff6b6b';
-        this.ctx.shadowBlur = 10;
-        
-        this.ctx.beginPath();
-        this.laserPath.forEach((point, index) => {
-            const x = (point.x + 0.5) * this.cellSize;
-            const y = (point.y + 0.5) * this.cellSize;
+        this.laserPaths.forEach((laserPath, laserIndex) => {
+            if (laserPath.length < 2) return;
             
-            if (index === 0) {
-                this.ctx.moveTo(x, y);
-            } else {
-                this.ctx.lineTo(x, y);
-            }
+            const laserColor = laserColors[laserIndex % laserColors.length];
+            
+            this.ctx.strokeStyle = laserColor;
+            this.ctx.lineWidth = 3;
+            this.ctx.lineCap = 'round';
+            
+            this.ctx.beginPath();
+            laserPath.forEach((point, index) => {
+                const x = (point.x + 0.5) * this.cellSize;
+                const y = (point.y + 0.5) * this.cellSize;
+                
+                if (index === 0) {
+                    this.ctx.moveTo(x, y);
+                } else {
+                    this.ctx.lineTo(x, y);
+                }
+            });
+            this.ctx.stroke();
         });
-        this.ctx.stroke();
-        
-        // Reset shadow
-        this.ctx.shadowColor = 'transparent';
-        this.ctx.shadowBlur = 0;
     }
     
     gameLoop() {
@@ -421,5 +425,9 @@ class LaserGame {
     }
 }
 
-// Initialize game when page loads
-const game = new LaserGame();
+// Start the game when page loads
+window.addEventListener('load', () => {
+    console.log("Page loaded, starting game...");
+    const game = new LaserGame();
+    window.game = game; // Make it globally available for debugging
+});
