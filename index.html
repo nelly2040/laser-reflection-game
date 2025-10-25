@@ -132,29 +132,43 @@
             font-size: 24px;
         }
         
-        .cell.wall {
-            background: rgba(60, 60, 100, 0.9);
-        }
-        
         .mirror {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             color: rgba(255, 255, 255, 0.9);
             text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
             cursor: grab;
             transition: all 0.2s;
-            font-size: 28px;
+            font-size: 42px;
             font-weight: bold;
+            background: rgba(60, 60, 100, 0.5);
+            border-radius: 4px;
+        }
+        
+        .mirror.active {
+            background: rgba(80, 120, 200, 0.7);
+            box-shadow: 0 0 10px rgba(100, 150, 255, 0.7);
         }
         
         .mirror:hover {
-            transform: scale(1.2);
+            transform: scale(1.05);
         }
         
         .target {
-            width: 70%;
-            height: 70%;
+            width: 80%;
+            height: 80%;
             background: radial-gradient(circle, #ff33aa, #aa0077);
             border-radius: 50%;
             box-shadow: 0 0 10px #ff00aa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
         }
         
         .target.hit {
@@ -193,6 +207,10 @@
             box-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
             z-index: 10;
             pointer-events: none;
+        }
+        
+        .laser-beam.diagonal {
+            transform-origin: center;
         }
         
         .game-controls {
@@ -353,6 +371,23 @@
             background: rgba(0, 0, 0, 0.5);
             padding: 2px 5px;
             border-radius: 3px;
+        }
+        
+        .reflection-indicator {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            font-size: 10px;
+            color: #ff9900;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 4px;
+            border-radius: 3px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .mirror.active .reflection-indicator {
+            opacity: 1;
         }
     </style>
 </head>
@@ -520,7 +555,8 @@
                 selectedMirrorType: 'forward',
                 placedMirrors: [],
                 laserPath: [],
-                autoLaser: true
+                autoLaser: true,
+                activeMirrors: new Set() // Track mirrors that are currently reflecting laser
             };
 
             // DOM elements
@@ -584,6 +620,7 @@
                             const targetEl = document.createElement('div');
                             targetEl.className = 'target';
                             targetEl.dataset.target = 'true';
+                            targetEl.textContent = 'T';
                             cell.appendChild(targetEl);
                         }
                         
@@ -596,6 +633,12 @@
                             mirrorEl.dataset.mirror = 'true';
                             mirrorEl.dataset.type = mirror.type;
                             mirrorEl.draggable = true;
+                            
+                            const reflectionIndicator = document.createElement('div');
+                            reflectionIndicator.className = 'reflection-indicator';
+                            reflectionIndicator.textContent = 'REFLECT';
+                            mirrorEl.appendChild(reflectionIndicator);
+                            
                             cell.appendChild(mirrorEl);
                         }
                         
@@ -608,6 +651,12 @@
                             mirrorEl.dataset.mirror = 'true';
                             mirrorEl.dataset.type = placedMirror.type;
                             mirrorEl.draggable = true;
+                            
+                            const reflectionIndicator = document.createElement('div');
+                            reflectionIndicator.className = 'reflection-indicator';
+                            reflectionIndicator.textContent = 'REFLECT';
+                            mirrorEl.appendChild(reflectionIndicator);
+                            
                             cell.appendChild(mirrorEl);
                         }
                         
@@ -706,10 +755,14 @@
                 let col = level.laser.col;
                 let direction = level.laser.direction;
                 
-                // Clear previous hits
+                // Clear previous hits and active mirrors
                 document.querySelectorAll('.target').forEach(target => {
                     target.classList.remove('hit');
                 });
+                document.querySelectorAll('.mirror').forEach(mirror => {
+                    mirror.classList.remove('active');
+                });
+                gameState.activeMirrors.clear();
                 
                 // Follow the laser path
                 while (row >= 0 && row < 7 && col >= 0 && col < 7) {
@@ -725,6 +778,14 @@
                     // Check for mirrors
                     const mirror = [...level.mirrors, ...gameState.placedMirrors].find(m => m.row === row && m.col === col);
                     if (mirror) {
+                        // Mark mirror as active
+                        const mirrorEl = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"] .mirror`);
+                        if (mirrorEl) {
+                            mirrorEl.classList.add('active');
+                            gameState.activeMirrors.add(`${row},${col}`);
+                        }
+                        
+                        // Change direction based on mirror type
                         direction = reflectLaser(direction, mirror.type);
                     }
                     
@@ -765,7 +826,7 @@
                 }
             }
 
-            // Draw laser beam
+            // Draw laser beam with diagonal reflection
             function drawLaserBeam(path) {
                 // Remove previous laser beams
                 document.querySelectorAll('.laser-beam').forEach(beam => beam.remove());
@@ -778,25 +839,46 @@
                     const beam = document.createElement('div');
                     beam.className = 'laser-beam';
                     
-                    if (current.direction === 'right' || current.direction === 'left') {
-                        beam.style.height = '4px';
-                        beam.style.width = 'calc(100% / 7)';
-                        beam.style.top = `calc(${current.row} * (100% / 7) + calc(100% / 14) - 2px)`;
-                        
-                        if (current.direction === 'right') {
-                            beam.style.left = `calc(${current.col} * (100% / 7) + (100% / 14))`;
-                        } else {
-                            beam.style.left = `calc(${current.col} * (100% / 7) - (100% / 14))`;
-                        }
-                    } else {
+                    // Check if this is a diagonal reflection
+                    const isDiagonal = (current.row !== next.row && current.col !== next.col);
+                    
+                    if (isDiagonal) {
+                        // Diagonal beam
                         beam.style.width = '4px';
-                        beam.style.height = 'calc(100% / 7)';
-                        beam.style.left = `calc(${current.col} * (100% / 7) + calc(100% / 14) - 2px)`;
+                        const dx = next.col - current.col;
+                        const dy = next.row - current.row;
+                        const length = Math.sqrt(dx*dx + dy*dy) * (100/7); // Percentage of board
+                        beam.style.height = `${length}%`;
                         
-                        if (current.direction === 'down') {
-                            beam.style.top = `calc(${current.row} * (100% / 7) + (100% / 14))`;
+                        // Calculate angle
+                        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+                        beam.style.transform = `rotate(${angle}deg)`;
+                        beam.style.transformOrigin = 'top left';
+                        
+                        beam.style.left = `calc(${current.col} * (100% / 7) + (100% / 14) - 2px)`;
+                        beam.style.top = `calc(${current.row} * (100% / 7) + (100% / 14))`;
+                    } else {
+                        // Horizontal or vertical beam
+                        if (current.direction === 'right' || current.direction === 'left') {
+                            beam.style.height = '4px';
+                            beam.style.width = 'calc(100% / 7)';
+                            beam.style.top = `calc(${current.row} * (100% / 7) + calc(100% / 14) - 2px)`;
+                            
+                            if (current.direction === 'right') {
+                                beam.style.left = `calc(${current.col} * (100% / 7) + (100% / 14))`;
+                            } else {
+                                beam.style.left = `calc(${current.col} * (100% / 7) - (100% / 14))`;
+                            }
                         } else {
-                            beam.style.top = `calc(${current.row} * (100% / 7) - (100% / 14))`;
+                            beam.style.width = '4px';
+                            beam.style.height = 'calc(100% / 7)';
+                            beam.style.left = `calc(${current.col} * (100% / 7) + calc(100% / 14) - 2px)`;
+                            
+                            if (current.direction === 'down') {
+                                beam.style.top = `calc(${current.row} * (100% / 7) + (100% / 14))`;
+                            } else {
+                                beam.style.top = `calc(${current.row} * (100% / 7) - (100% / 14))`;
+                            }
                         }
                     }
                     
@@ -838,6 +920,7 @@
                     } else {
                         document.querySelectorAll('.laser-beam').forEach(beam => beam.remove());
                         document.querySelectorAll('.target.hit').forEach(target => target.classList.remove('hit'));
+                        document.querySelectorAll('.mirror').forEach(mirror => mirror.classList.remove('active'));
                         updateDisplay();
                     }
                 });
