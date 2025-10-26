@@ -109,108 +109,10 @@
             aspect-ratio: 1;
         }
         
-        .board {
+        #game-canvas {
             width: 100%;
             height: 100%;
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            grid-template-rows: repeat(7, 1fr);
-            gap: 2px;
-            background: rgba(80, 80, 120, 0.8);
-            border: 2px solid rgba(100, 100, 150, 0.9);
-            padding: 2px;
-        }
-        
-        .cell {
-            background: rgba(40, 40, 80, 0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            border: 1px solid rgba(70, 70, 110, 0.7);
-            font-weight: bold;
-            font-size: 24px;
-        }
-        
-        .mirror {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: rgba(255, 255, 255, 0.9);
-            text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
-            cursor: grab;
-            transition: all 0.2s;
-            font-size: 42px;
-            font-weight: bold;
-            background: rgba(60, 60, 100, 0.5);
-            border-radius: 4px;
-        }
-        
-        .mirror.active {
-            background: rgba(80, 120, 200, 0.7);
-            box-shadow: 0 0 10px rgba(100, 150, 255, 0.7);
-        }
-        
-        .mirror:hover {
-            transform: scale(1.05);
-        }
-        
-        .target {
-            width: 80%;
-            height: 80%;
-            background: radial-gradient(circle, #ff33aa, #aa0077);
-            border-radius: 50%;
-            box-shadow: 0 0 10px #ff00aa;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-size: 14px;
-            font-weight: bold;
-        }
-        
-        .target.hit {
-            background: radial-gradient(circle, #33ff33, #009900);
-            box-shadow: 0 0 10px #00ff00;
-        }
-        
-        .laser-source {
-            width: 80%;
-            height: 80%;
-            background: #ff3300;
-            border-radius: 50%;
-            box-shadow: 0 0 15px #ff3300;
-            position: relative;
-        }
-        
-        .laser-source::after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: #ff6600;
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.7; }
-            50% { transform: scale(1.2); opacity: 0.3; }
-            100% { transform: scale(1); opacity: 0.7; }
-        }
-        
-        .laser-beam {
-            position: absolute;
-            background: rgba(255, 50, 50, 0.7);
-            box-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
-            z-index: 10;
-            pointer-events: none;
-        }
-        
-        .laser-beam.diagonal {
-            transform-origin: center;
+            display: block;
         }
         
         .game-controls {
@@ -362,32 +264,23 @@
             margin-top: 10px;
         }
         
-        .laser-direction {
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            font-size: 12px;
-            color: #ff9900;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 2px 5px;
-            border-radius: 3px;
+        .level-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 10px;
         }
         
-        .reflection-indicator {
-            position: absolute;
-            bottom: 5px;
-            right: 5px;
-            font-size: 10px;
-            color: #ff9900;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 2px 4px;
-            border-radius: 3px;
-            opacity: 0;
-            transition: opacity 0.3s;
+        .level-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
         }
         
-        .mirror.active .reflection-indicator {
-            opacity: 1;
+        .level-dot.active {
+            background: #ffcc00;
+            box-shadow: 0 0 5px #ffcc00;
         }
     </style>
 </head>
@@ -397,11 +290,11 @@
             <div class="game-title">LASER REFLECTION PUZZLE</div>
             <div class="game-stats">
                 <div class="stat">
-                    <div class="stat-value" id="level-display">1.1</div>
+                    <div class="stat-value" id="level-display">1</div>
                     <div class="stat-label">LEVEL</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-value" id="targets-display">0/3</div>
+                    <div class="stat-value" id="targets-display">0/0</div>
                     <div class="stat-label">TARGETS</div>
                 </div>
                 <div class="stat">
@@ -414,19 +307,17 @@
         <div class="game-content">
             <div class="game-board">
                 <div class="board-header">
-                    <div class="level-title">Level <span id="level-title">1.1</span></div>
-                    <div class="objective">Redirect the laser to hit all targets</div>
+                    <div class="level-title">Level <span id="level-title">1</span></div>
+                    <div class="objective">Redirect the lasers to hit all targets</div>
                 </div>
                 
                 <div class="board-container">
-                    <div class="board" id="game-board">
-                        <!-- Game board will be generated by JavaScript -->
-                    </div>
+                    <canvas id="game-canvas"></canvas>
                     <div class="level-complete" id="level-complete">
                         <div class="complete-message">LEVEL COMPLETE!</div>
                         <div class="complete-stats">
-                            <div>Targets hit: <span id="targets-hit">3</span>/<span id="targets-total">3</span></div>
-                            <div>Moves used: <span id="moves-used">5</span></div>
+                            <div>Targets hit: <span id="targets-hit">0</span>/<span id="targets-total">0</span></div>
+                            <div>Moves used: <span id="moves-used">0</span></div>
                         </div>
                         <div class="controls-row">
                             <button class="btn btn-secondary" id="next-level">NEXT LEVEL</button>
@@ -436,6 +327,9 @@
                 </div>
                 
                 <div class="drag-instruction">Drag mirrors to change the laser path</div>
+                <div class="level-indicator" id="level-indicator">
+                    <!-- Level dots will be generated by JavaScript -->
+                </div>
             </div>
             
             <div class="game-controls">
@@ -488,142 +382,114 @@
                 currentLevel: 1,
                 levels: [
                     {
-                        // Level 1.1 - Simple diagonal reflection
-                        grid: [
-                            [1, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0]
-                        ],
-                        laser: { row: 0, col: 0, direction: 'right' },
-                        targets: [{ row: 6, col: 6 }],
+                        // Level 1 - Simple diagonal reflection
+                        lasers: [{ x: 0, y: 0, direction: 'right' }],
+                        targets: [{ x: 6, y: 6 }],
                         mirrors: [
-                            { row: 3, col: 3, type: 'forward' }
+                            { x: 3, y: 3, type: 'forward', movable: true }
                         ],
-                        movableMirrors: 1
+                        blockers: [],
+                        gridSize: 7
                     },
                     {
-                        // Level 1.2 - Two mirrors, two targets
-                        grid: [
-                            [1, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0]
-                        ],
-                        laser: { row: 0, col: 0, direction: 'right' },
-                        targets: [{ row: 3, col: 6 }, { row: 6, col: 3 }],
+                        // Level 2 - Two mirrors, two targets
+                        lasers: [{ x: 0, y: 0, direction: 'right' }],
+                        targets: [{ x: 6, y: 0 }, { x: 0, y: 6 }],
                         mirrors: [
-                            { row: 2, col: 2, type: 'forward' },
-                            { row: 2, col: 4, type: 'backward' }
+                            { x: 3, y: 0, type: 'forward', movable: true },
+                            { x: 0, y: 3, type: 'backward', movable: true }
                         ],
-                        movableMirrors: 2
+                        blockers: [],
+                        gridSize: 7
                     },
                     {
-                        // Level 1.3 - Complex path with multiple reflections
-                        grid: [
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [1, 0, 0, 0, 0, 0, 0]
-                        ],
-                        laser: { row: 6, col: 0, direction: 'right' },
-                        targets: [{ row: 0, col: 3 }, { row: 3, col: 6 }, { row: 6, col: 3 }],
+                        // Level 3 - Multiple reflections with blockers
+                        lasers: [{ x: 0, y: 0, direction: 'right' }],
+                        targets: [{ x: 6, y: 6 }],
                         mirrors: [
-                            { row: 1, col: 2, type: 'forward' },
-                            { row: 2, col: 4, type: 'backward' },
-                            { row: 4, col: 4, type: 'forward' }
+                            { x: 3, y: 0, type: 'forward', movable: true },
+                            { x: 6, y: 3, type: 'backward', movable: true }
                         ],
-                        movableMirrors: 3
+                        blockers: [
+                            { x: 3, y: 3 }, { x: 4, y: 4 }
+                        ],
+                        gridSize: 7
                     },
                     {
-                        // Level 1.4 - Top-right laser with complex path
-                        grid: [
-                            [0, 0, 0, 0, 0, 0, 1],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0]
+                        // Level 4 - Two lasers, complex path
+                        lasers: [
+                            { x: 0, y: 0, direction: 'right' },
+                            { x: 6, y: 6, direction: 'left' }
                         ],
-                        laser: { row: 0, col: 6, direction: 'down' },
-                        targets: [{ row: 3, col: 0 }, { row: 3, col: 3 }, { row: 6, col: 6 }],
+                        targets: [{ x: 3, y: 3 }, { x: 0, y: 6 }, { x: 6, y: 0 }],
                         mirrors: [
-                            { row: 1, col: 4, type: 'backward' },
-                            { row: 2, col: 2, type: 'forward' },
-                            { row: 4, col: 2, type: 'backward' }
+                            { x: 3, y: 0, type: 'forward', movable: true },
+                            { x: 0, y: 3, type: 'backward', movable: true },
+                            { x: 6, y: 3, type: 'forward', movable: true },
+                            { x: 3, y: 6, type: 'backward', movable: true }
                         ],
-                        movableMirrors: 3
+                        blockers: [
+                            { x: 2, y: 2 }, { x: 4, y: 4 }
+                        ],
+                        gridSize: 7
                     },
                     {
-                        // Level 1.5 - Multiple targets with strategic placement
-                        grid: [
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 1, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0]
+                        // Level 5 - Multiple lasers with complex reflections
+                        lasers: [
+                            { x: 0, y: 0, direction: 'right' },
+                            { x: 6, y: 0, direction: 'down' },
+                            { x: 6, y: 6, direction: 'left' }
                         ],
-                        laser: { row: 3, col: 3, direction: 'up' },
+                        targets: [{ x: 3, y: 3 }, { x: 0, y: 6 }, { x: 6, y: 3 }, { x: 3, y: 0 }],
+                        mirrors: [
+                            { x: 2, y: 2, type: 'forward', movable: true },
+                            { x: 4, y: 2, type: 'backward', movable: true },
+                            { x: 2, y: 4, type: 'backward', movable: true },
+                            { x: 4, y: 4, type: 'forward', movable: true }
+                        ],
+                        blockers: [
+                            { x: 1, y: 1 }, { x: 5, y: 1 }, { x: 1, y: 5 }, { x: 5, y: 5 }
+                        ],
+                        gridSize: 7
+                    },
+                    {
+                        // Level 6 - Ultimate challenge with multiple lasers and targets
+                        lasers: [
+                            { x: 0, y: 0, direction: 'right' },
+                            { x: 6, y: 0, direction: 'down' },
+                            { x: 6, y: 6, direction: 'left' },
+                            { x: 0, y: 6, direction: 'up' }
+                        ],
                         targets: [
-                            { row: 0, col: 0 }, { row: 0, col: 6 }, 
-                            { row: 6, col: 0 }, { row: 6, col: 6 }
+                            { x: 2, y: 2 }, { x: 4, y: 2 }, 
+                            { x: 2, y: 4 }, { x: 4, y: 4 },
+                            { x: 3, y: 3 }
                         ],
                         mirrors: [
-                            { row: 1, col: 1, type: 'forward' },
-                            { row: 1, col: 5, type: 'backward' },
-                            { row: 5, col: 1, type: 'backward' },
-                            { row: 5, col: 5, type: 'forward' }
+                            { x: 1, y: 1, type: 'forward', movable: true },
+                            { x: 5, y: 1, type: 'backward', movable: true },
+                            { x: 1, y: 5, type: 'backward', movable: true },
+                            { x: 5, y: 5, type: 'forward', movable: true },
+                            { x: 3, y: 1, type: 'forward', movable: true },
+                            { x: 3, y: 5, type: 'backward', movable: true }
                         ],
-                        movableMirrors: 4
-                    },
-                    {
-                        // Level 1.6 - Complex maze-like pattern
-                        grid: [
-                            [1, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0]
+                        blockers: [
+                            { x: 0, y: 3 }, { x: 6, y: 3 }, { x: 3, y: 0 }, { x: 3, y: 6 }
                         ],
-                        laser: { row: 0, col: 0, direction: 'right' },
-                        targets: [
-                            { row: 0, col: 6 }, { row: 3, col: 3 }, 
-                            { row: 6, col: 0 }, { row: 6, col: 6 }
-                        ],
-                        mirrors: [
-                            { row: 1, col: 2, type: 'forward' },
-                            { row: 2, col: 4, type: 'backward' },
-                            { row: 3, col: 1, type: 'backward' },
-                            { row: 4, col: 5, type: 'forward' },
-                            { row: 5, col: 3, type: 'forward' }
-                        ],
-                        movableMirrors: 5
+                        gridSize: 7
                     }
                 ],
                 moves: 0,
                 selectedMirrorType: 'forward',
-                placedMirrors: [],
-                laserPath: [],
                 autoLaser: true,
-                activeMirrors: new Set() // Track mirrors that are currently reflecting laser
+                draggedMirror: null,
+                cellSize: 0,
+                hitTargets: new Set()
             };
 
             // DOM elements
-            const gameBoard = document.getElementById('game-board');
+            const canvas = document.getElementById('game-canvas');
+            const ctx = canvas.getContext('2d');
             const levelDisplay = document.getElementById('level-display');
             const targetsDisplay = document.getElementById('targets-display');
             const movesDisplay = document.getElementById('moves-display');
@@ -640,169 +506,252 @@
             const targetsTotal = document.getElementById('targets-total');
             const movesUsed = document.getElementById('moves-used');
             const mirrorOptions = document.querySelectorAll('.mirror-option');
+            const levelIndicator = document.getElementById('level-indicator');
 
             // Initialize the game
             function initGame() {
-                renderBoard();
-                updateDisplay();
+                setupCanvas();
+                createLevelIndicator();
                 setupEventListeners();
+                renderGame();
                 if (gameState.autoLaser) {
-                    calculateAndDrawLaser();
+                    calculateAndDrawLasers();
                 }
-            }
-
-            // Render the game board
-            function renderBoard() {
-                gameBoard.innerHTML = '';
-                const level = gameState.levels[gameState.currentLevel - 1];
-                
-                // Create cells
-                for (let row = 0; row < 7; row++) {
-                    for (let col = 0; col < 7; col++) {
-                        const cell = document.createElement('div');
-                        cell.className = 'cell';
-                        cell.dataset.row = row;
-                        cell.dataset.col = col;
-                        
-                        // Add laser source with direction indicator
-                        if (row === level.laser.row && col === level.laser.col) {
-                            const laser = document.createElement('div');
-                            laser.className = 'laser-source';
-                            
-                            const directionIndicator = document.createElement('div');
-                            directionIndicator.className = 'laser-direction';
-                            directionIndicator.textContent = level.laser.direction.toUpperCase();
-                            
-                            cell.appendChild(laser);
-                            cell.appendChild(directionIndicator);
-                        }
-                        
-                        // Add targets
-                        const target = level.targets.find(t => t.row === row && t.col === col);
-                        if (target) {
-                            const targetEl = document.createElement('div');
-                            targetEl.className = 'target';
-                            targetEl.dataset.target = 'true';
-                            targetEl.textContent = 'T';
-                            cell.appendChild(targetEl);
-                        }
-                        
-                        // Add mirrors
-                        const mirror = level.mirrors.find(m => m.row === row && m.col === col);
-                        if (mirror) {
-                            const mirrorEl = document.createElement('div');
-                            mirrorEl.className = 'mirror';
-                            mirrorEl.textContent = mirror.type === 'forward' ? '/' : '\\';
-                            mirrorEl.dataset.mirror = 'true';
-                            mirrorEl.dataset.type = mirror.type;
-                            mirrorEl.draggable = true;
-                            
-                            const reflectionIndicator = document.createElement('div');
-                            reflectionIndicator.className = 'reflection-indicator';
-                            reflectionIndicator.textContent = 'REFLECT';
-                            mirrorEl.appendChild(reflectionIndicator);
-                            
-                            cell.appendChild(mirrorEl);
-                        }
-                        
-                        // Add placed mirrors
-                        const placedMirror = gameState.placedMirrors.find(m => m.row === row && m.col === col);
-                        if (placedMirror) {
-                            const mirrorEl = document.createElement('div');
-                            mirrorEl.className = 'mirror';
-                            mirrorEl.textContent = placedMirror.type === 'forward' ? '/' : '\\';
-                            mirrorEl.dataset.mirror = 'true';
-                            mirrorEl.dataset.type = placedMirror.type;
-                            mirrorEl.draggable = true;
-                            
-                            const reflectionIndicator = document.createElement('div');
-                            reflectionIndicator.className = 'reflection-indicator';
-                            reflectionIndicator.textContent = 'REFLECT';
-                            mirrorEl.appendChild(reflectionIndicator);
-                            
-                            cell.appendChild(mirrorEl);
-                        }
-                        
-                        gameBoard.appendChild(cell);
-                    }
-                }
-                
-                // Add drag and drop functionality
-                setupDragAndDrop();
-            }
-
-            // Set up drag and drop for mirrors
-            function setupDragAndDrop() {
-                const mirrors = document.querySelectorAll('[data-mirror="true"]');
-                const cells = document.querySelectorAll('.cell');
-                
-                mirrors.forEach(mirror => {
-                    mirror.addEventListener('dragstart', handleDragStart);
-                });
-                
-                cells.forEach(cell => {
-                    cell.addEventListener('dragover', handleDragOver);
-                    cell.addEventListener('drop', handleDrop);
-                });
-            }
-
-            function handleDragStart(e) {
-                const mirror = e.target;
-                const cell = mirror.parentElement;
-                e.dataTransfer.setData('text/plain', JSON.stringify({
-                    row: parseInt(cell.dataset.row),
-                    col: parseInt(cell.dataset.col),
-                    type: mirror.dataset.type
-                }));
-            }
-
-            function handleDragOver(e) {
-                e.preventDefault();
-            }
-
-            function handleDrop(e) {
-                e.preventDefault();
-                const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-                const cell = e.target.closest('.cell');
-                
-                if (!cell || cell.querySelector('[data-mirror="true"]')) return;
-                
-                // Remove mirror from original position
-                const level = gameState.levels[gameState.currentLevel - 1];
-                const mirrorIndex = level.mirrors.findIndex(m => 
-                    m.row === data.row && m.col === data.col);
-                
-                if (mirrorIndex !== -1) {
-                    level.mirrors[mirrorIndex].row = parseInt(cell.dataset.row);
-                    level.mirrors[mirrorIndex].col = parseInt(cell.dataset.col);
-                } else {
-                    const placedIndex = gameState.placedMirrors.findIndex(m => 
-                        m.row === data.row && m.col === data.col);
-                    
-                    if (placedIndex !== -1) {
-                        gameState.placedMirrors[placedIndex].row = parseInt(cell.dataset.row);
-                        gameState.placedMirrors[placedIndex].col = parseInt(cell.dataset.col);
-                    }
-                }
-                
-                gameState.moves++;
-                renderBoard();
                 updateDisplay();
-                
-                // Auto-update laser if enabled
-                if (gameState.autoLaser) {
-                    calculateAndDrawLaser();
+            }
+
+            // Set up canvas
+            function setupCanvas() {
+                const container = document.querySelector('.board-container');
+                const size = Math.min(container.clientWidth, container.clientHeight);
+                canvas.width = size;
+                canvas.height = size;
+                gameState.cellSize = size / gameState.levels[gameState.currentLevel - 1].gridSize;
+            }
+
+            // Create level indicator dots
+            function createLevelIndicator() {
+                levelIndicator.innerHTML = '';
+                for (let i = 0; i < gameState.levels.length; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = `level-dot ${i + 1 === gameState.currentLevel ? 'active' : ''}`;
+                    dot.addEventListener('click', () => {
+                        gameState.currentLevel = i + 1;
+                        gameState.moves = 0;
+                        gameState.hitTargets.clear();
+                        setupCanvas();
+                        renderGame();
+                        if (gameState.autoLaser) {
+                            calculateAndDrawLasers();
+                        }
+                        updateDisplay();
+                    });
+                    levelIndicator.appendChild(dot);
                 }
             }
 
-            // Calculate laser path and draw it
-            function calculateAndDrawLaser() {
-                const path = calculateLaserPath();
-                drawLaserBeam(path);
+            // Render the game
+            function renderGame() {
+                const level = gameState.levels[gameState.currentLevel - 1];
                 
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw grid
+                drawGrid();
+                
+                // Draw blockers
+                drawBlockers();
+                
+                // Draw targets
+                drawTargets();
+                
+                // Draw mirrors
+                drawMirrors();
+                
+                // Draw lasers
+                drawLasers();
+            }
+
+            // Draw grid
+            function drawGrid() {
+                const level = gameState.levels[gameState.currentLevel - 1];
+                const size = gameState.cellSize;
+                
+                ctx.strokeStyle = 'rgba(100, 100, 150, 0.5)';
+                ctx.lineWidth = 1;
+                
+                for (let i = 0; i <= level.gridSize; i++) {
+                    // Vertical lines
+                    ctx.beginPath();
+                    ctx.moveTo(i * size, 0);
+                    ctx.lineTo(i * size, canvas.height);
+                    ctx.stroke();
+                    
+                    // Horizontal lines
+                    ctx.beginPath();
+                    ctx.moveTo(0, i * size);
+                    ctx.lineTo(canvas.width, i * size);
+                    ctx.stroke();
+                }
+            }
+
+            // Draw blockers
+            function drawBlockers() {
+                const level = gameState.levels[gameState.currentLevel - 1];
+                const size = gameState.cellSize;
+                
+                ctx.fillStyle = 'rgba(80, 80, 120, 0.9)';
+                ctx.strokeStyle = 'rgba(60, 60, 100, 0.9)';
+                ctx.lineWidth = 2;
+                
+                level.blockers.forEach(blocker => {
+                    ctx.fillRect(blocker.x * size, blocker.y * size, size, size);
+                    ctx.strokeRect(blocker.x * size, blocker.y * size, size, size);
+                    
+                    // Draw X mark
+                    ctx.strokeStyle = 'rgba(40, 40, 80, 0.9)';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(blocker.x * size + 5, blocker.y * size + 5);
+                    ctx.lineTo((blocker.x + 1) * size - 5, (blocker.y + 1) * size - 5);
+                    ctx.moveTo((blocker.x + 1) * size - 5, blocker.y * size + 5);
+                    ctx.lineTo(blocker.x * size + 5, (blocker.y + 1) * size - 5);
+                    ctx.stroke();
+                });
+            }
+
+            // Draw targets
+            function drawTargets() {
+                const level = gameState.levels[gameState.currentLevel - 1];
+                const size = gameState.cellSize;
+                
+                level.targets.forEach(target => {
+                    const centerX = target.x * size + size / 2;
+                    const centerY = target.y * size + size / 2;
+                    const radius = size / 3;
+                    
+                    // Check if target is hit
+                    const isHit = gameState.hitTargets.has(`${target.x},${target.y}`);
+                    
+                    // Target circle
+                    const gradient = ctx.createRadialGradient(
+                        centerX, centerY, radius / 2,
+                        centerX, centerY, radius
+                    );
+                    
+                    if (isHit) {
+                        gradient.addColorStop(0, '#33ff33');
+                        gradient.addColorStop(1, '#009900');
+                    } else {
+                        gradient.addColorStop(0, '#ff33aa');
+                        gradient.addColorStop(1, '#aa0077');
+                    }
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Target outline
+                    ctx.strokeStyle = isHit ? '#00ff00' : '#ff00aa';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                    
+                    // Target letter
+                    ctx.fillStyle = 'white';
+                    ctx.font = 'bold ' + (size / 3) + 'px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('T', centerX, centerY);
+                });
+            }
+
+            // Draw mirrors
+            function drawMirrors() {
+                const level = gameState.levels[gameState.currentLevel - 1];
+                const size = gameState.cellSize;
+                
+                level.mirrors.forEach(mirror => {
+                    const x = mirror.x * size;
+                    const y = mirror.y * size;
+                    
+                    // Mirror background
+                    ctx.fillStyle = mirror.movable ? 'rgba(100, 150, 255, 0.7)' : 'rgba(150, 100, 255, 0.7)';
+                    ctx.fillRect(x, y, size, size);
+                    
+                    // Mirror border
+                    ctx.strokeStyle = mirror.movable ? 'rgba(80, 130, 255, 0.9)' : 'rgba(130, 80, 255, 0.9)';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(x, y, size, size);
+                    
+                    // Draw diagonal line for mirror
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    
+                    if (mirror.type === 'forward') {
+                        // Forward slash (/)
+                        ctx.moveTo(x + size - 5, y + 5);
+                        ctx.lineTo(x + 5, y + size - 5);
+                    } else {
+                        // Backward slash (\)
+                        ctx.moveTo(x + 5, y + 5);
+                        ctx.lineTo(x + size - 5, y + size - 5);
+                    }
+                    
+                    ctx.stroke();
+                });
+            }
+
+            // Draw lasers
+            function drawLasers() {
+                const level = gameState.levels[gameState.currentLevel - 1];
+                const size = gameState.cellSize;
+                
+                level.lasers.forEach(laser => {
+                    const x = laser.x * size + size / 2;
+                    const y = laser.y * size + size / 2;
+                    
+                    // Laser source
+                    const gradient = ctx.createRadialGradient(x, y, size / 8, x, y, size / 3);
+                    gradient.addColorStop(0, '#ff6600');
+                    gradient.addColorStop(1, '#ff3300');
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(x, y, size / 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Laser direction indicator
+                    ctx.fillStyle = '#ff9900';
+                    ctx.font = 'bold ' + (size / 4) + 'px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(laser.direction.toUpperCase(), x, y);
+                });
+            }
+
+            // Calculate and draw laser paths
+            function calculateAndDrawLasers() {
+                const level = gameState.levels[gameState.currentLevel - 1];
+                
+                // Clear previous laser beams and hit targets
+                gameState.hitTargets.clear();
+                renderGame();
+                
+                // Calculate and draw each laser path
+                level.lasers.forEach(laser => {
+                    const path = calculateLaserPath(laser);
+                    drawLaserBeam(path);
+                });
+                
+                // Check if level is complete
                 if (checkLevelComplete()) {
-                    targetsHit.textContent = document.querySelectorAll('.target.hit').length;
-                    targetsTotal.textContent = gameState.levels[gameState.currentLevel - 1].targets.length;
+                    targetsHit.textContent = gameState.hitTargets.size;
+                    targetsTotal.textContent = level.targets.length;
                     movesUsed.textContent = gameState.moves;
                     levelComplete.classList.add('show');
                 }
@@ -811,59 +760,52 @@
             }
 
             // Calculate laser path
-            function calculateLaserPath() {
+            function calculateLaserPath(laser) {
                 const level = gameState.levels[gameState.currentLevel - 1];
                 const path = [];
-                let row = level.laser.row;
-                let col = level.laser.col;
-                let direction = level.laser.direction;
+                let x = laser.x;
+                let y = laser.y;
+                let direction = laser.direction;
                 
-                // Clear previous hits and active mirrors
-                document.querySelectorAll('.target').forEach(target => {
-                    target.classList.remove('hit');
-                });
-                document.querySelectorAll('.mirror').forEach(mirror => {
-                    mirror.classList.remove('active');
-                });
-                gameState.activeMirrors.clear();
+                // Add starting point
+                path.push({ x, y, direction });
                 
                 // Follow the laser path
-                while (row >= 0 && row < 7 && col >= 0 && col < 7) {
-                    path.push({ row, col, direction });
-                    
-                    // Check if we hit a target
-                    const target = level.targets.find(t => t.row === row && t.col === col);
-                    if (target) {
-                        const targetEl = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"] .target`);
-                        if (targetEl) targetEl.classList.add('hit');
-                    }
-                    
-                    // Check for mirrors
-                    const mirror = [...level.mirrors, ...gameState.placedMirrors].find(m => m.row === row && m.col === col);
-                    if (mirror) {
-                        // Mark mirror as active
-                        const mirrorEl = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"] .mirror`);
-                        if (mirrorEl) {
-                            mirrorEl.classList.add('active');
-                            gameState.activeMirrors.add(`${row},${col}`);
-                        }
-                        
-                        // Change direction based on mirror type
-                        direction = reflectLaser(direction, mirror.type);
-                    }
-                    
+                while (x >= 0 && x < level.gridSize && y >= 0 && y < level.gridSize) {
                     // Move to next cell
                     switch (direction) {
-                        case 'right': col++; break;
-                        case 'left': col--; break;
-                        case 'down': row++; break;
-                        case 'up': row--; break;
+                        case 'right': x++; break;
+                        case 'left': x--; break;
+                        case 'down': y++; break;
+                        case 'up': y--; break;
                     }
                     
                     // Check if we're going out of bounds
-                    if (row < 0 || row >= 7 || col < 0 || col >= 7) {
-                        path.push({ row, col, direction });
+                    if (x < 0 || x >= level.gridSize || y < 0 || y >= level.gridSize) {
+                        path.push({ x, y, direction });
                         break;
+                    }
+                    
+                    // Add current position to path
+                    path.push({ x, y, direction });
+                    
+                    // Check for targets
+                    const target = level.targets.find(t => t.x === x && t.y === y);
+                    if (target) {
+                        gameState.hitTargets.add(`${target.x},${target.y}`);
+                    }
+                    
+                    // Check for blockers
+                    const blocker = level.blockers.find(b => b.x === x && b.y === y);
+                    if (blocker) {
+                        break; // Laser stops at blocker
+                    }
+                    
+                    // Check for mirrors
+                    const mirror = level.mirrors.find(m => m.x === x && m.y === y);
+                    if (mirror) {
+                        // Change direction based on mirror type
+                        direction = reflectLaser(direction, mirror.type);
                     }
                 }
                 
@@ -889,89 +831,67 @@
                 }
             }
 
-            // Draw laser beam with diagonal reflection
+            // Draw laser beam
             function drawLaserBeam(path) {
-                // Remove previous laser beams
-                document.querySelectorAll('.laser-beam').forEach(beam => beam.remove());
+                const size = gameState.cellSize;
                 
-                // Draw new laser beams
+                ctx.strokeStyle = 'rgba(255, 50, 50, 0.7)';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([]);
+                
                 for (let i = 0; i < path.length - 1; i++) {
                     const current = path[i];
                     const next = path[i + 1];
                     
-                    const beam = document.createElement('div');
-                    beam.className = 'laser-beam';
+                    const startX = current.x * size + size / 2;
+                    const startY = current.y * size + size / 2;
+                    const endX = next.x * size + size / 2;
+                    const endY = next.y * size + size / 2;
                     
-                    // Check if this is a diagonal reflection
-                    const isDiagonal = (current.row !== next.row && current.col !== next.col);
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY);
+                    ctx.lineTo(endX, endY);
+                    ctx.stroke();
                     
-                    if (isDiagonal) {
-                        // Diagonal beam
-                        beam.style.width = '4px';
-                        const dx = next.col - current.col;
-                        const dy = next.row - current.row;
-                        const length = Math.sqrt(dx*dx + dy*dy) * (100/7); // Percentage of board
-                        beam.style.height = `${length}%`;
-                        
-                        // Calculate angle
-                        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-                        beam.style.transform = `rotate(${angle}deg)`;
-                        beam.style.transformOrigin = 'top left';
-                        
-                        beam.style.left = `calc(${current.col} * (100% / 7) + (100% / 14) - 2px)`;
-                        beam.style.top = `calc(${current.row} * (100% / 7) + (100% / 14))`;
-                    } else {
-                        // Horizontal or vertical beam
-                        if (current.direction === 'right' || current.direction === 'left') {
-                            beam.style.height = '4px';
-                            beam.style.width = 'calc(100% / 7)';
-                            beam.style.top = `calc(${current.row} * (100% / 7) + calc(100% / 14) - 2px)`;
-                            
-                            if (current.direction === 'right') {
-                                beam.style.left = `calc(${current.col} * (100% / 7) + (100% / 14))`;
-                            } else {
-                                beam.style.left = `calc(${current.col} * (100% / 7) - (100% / 14))`;
-                            }
-                        } else {
-                            beam.style.width = '4px';
-                            beam.style.height = 'calc(100% / 7)';
-                            beam.style.left = `calc(${current.col} * (100% / 7) + calc(100% / 14) - 2px)`;
-                            
-                            if (current.direction === 'down') {
-                                beam.style.top = `calc(${current.row} * (100% / 7) + (100% / 14))`;
-                            } else {
-                                beam.style.top = `calc(${current.row} * (100% / 7) - (100% / 14))`;
-                            }
-                        }
-                    }
+                    // Draw laser glow
+                    ctx.strokeStyle = 'rgba(255, 100, 100, 0.3)';
+                    ctx.lineWidth = 8;
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY);
+                    ctx.lineTo(endX, endY);
+                    ctx.stroke();
                     
-                    document.querySelector('.board-container').appendChild(beam);
+                    // Reset for next segment
+                    ctx.strokeStyle = 'rgba(255, 50, 50, 0.7)';
+                    ctx.lineWidth = 3;
                 }
             }
 
             // Check if all targets are hit
             function checkLevelComplete() {
                 const level = gameState.levels[gameState.currentLevel - 1];
-                const hitTargets = document.querySelectorAll('.target.hit').length;
-                return hitTargets === level.targets.length;
+                return gameState.hitTargets.size === level.targets.length;
             }
 
             // Update display
             function updateDisplay() {
                 const level = gameState.levels[gameState.currentLevel - 1];
-                levelDisplay.textContent = `1.${gameState.currentLevel}`;
-                levelTitle.textContent = `1.${gameState.currentLevel}`;
+                levelDisplay.textContent = gameState.currentLevel;
+                levelTitle.textContent = gameState.currentLevel;
                 
-                const hitTargets = document.querySelectorAll('.target.hit').length;
-                targetsDisplay.textContent = `${hitTargets}/${level.targets.length}`;
-                
+                targetsDisplay.textContent = `${gameState.hitTargets.size}/${level.targets.length}`;
                 movesDisplay.textContent = gameState.moves;
+                
+                // Update level indicator
+                document.querySelectorAll('.level-dot').forEach((dot, index) => {
+                    dot.classList.toggle('active', index + 1 === gameState.currentLevel);
+                });
             }
 
             // Set up event listeners
             function setupEventListeners() {
                 stepLaserBtn.addEventListener('click', function() {
-                    calculateAndDrawLaser();
+                    calculateAndDrawLasers();
                 });
                 
                 autoLaserBtn.addEventListener('click', function() {
@@ -979,40 +899,44 @@
                     autoLaserBtn.textContent = gameState.autoLaser ? 'AUTO LASER (ON)' : 'AUTO LASER (OFF)';
                     
                     if (gameState.autoLaser) {
-                        calculateAndDrawLaser();
+                        calculateAndDrawLasers();
                     } else {
-                        document.querySelectorAll('.laser-beam').forEach(beam => beam.remove());
-                        document.querySelectorAll('.target.hit').forEach(target => target.classList.remove('hit'));
-                        document.querySelectorAll('.mirror').forEach(mirror => mirror.classList.remove('active'));
+                        renderGame();
                         updateDisplay();
                     }
                 });
                 
                 resetLevelBtn.addEventListener('click', function() {
                     gameState.moves = 0;
-                    gameState.placedMirrors = [];
-                    renderBoard();
-                    updateDisplay();
-                    document.querySelectorAll('.laser-beam').forEach(beam => beam.remove());
-                    
+                    gameState.hitTargets.clear();
+                    // Reset mirrors to original positions
+                    const level = gameState.levels[gameState.currentLevel - 1];
+                    level.mirrors.forEach(mirror => {
+                        if (mirror.originalX !== undefined) {
+                            mirror.x = mirror.originalX;
+                            mirror.y = mirror.originalY;
+                        }
+                    });
+                    renderGame();
                     if (gameState.autoLaser) {
-                        calculateAndDrawLaser();
+                        calculateAndDrawLasers();
                     }
+                    updateDisplay();
                 });
                 
                 prevLevelBtn.addEventListener('click', function() {
                     if (gameState.currentLevel > 1) {
                         gameState.currentLevel--;
                         gameState.moves = 0;
-                        gameState.placedMirrors = [];
-                        renderBoard();
-                        updateDisplay();
-                        document.querySelectorAll('.laser-beam').forEach(beam => beam.remove());
+                        gameState.hitTargets.clear();
+                        setupCanvas();
+                        renderGame();
                         levelComplete.classList.remove('show');
                         
                         if (gameState.autoLaser) {
-                            calculateAndDrawLaser();
+                            calculateAndDrawLasers();
                         }
+                        updateDisplay();
                     }
                 });
                 
@@ -1020,15 +944,15 @@
                     if (gameState.currentLevel < gameState.levels.length) {
                         gameState.currentLevel++;
                         gameState.moves = 0;
-                        gameState.placedMirrors = [];
-                        renderBoard();
-                        updateDisplay();
-                        document.querySelectorAll('.laser-beam').forEach(beam => beam.remove());
+                        gameState.hitTargets.clear();
+                        setupCanvas();
+                        renderGame();
                         levelComplete.classList.remove('show');
                         
                         if (gameState.autoLaser) {
-                            calculateAndDrawLaser();
+                            calculateAndDrawLasers();
                         }
+                        updateDisplay();
                     }
                 });
                 
@@ -1036,13 +960,13 @@
                     if (gameState.currentLevel < gameState.levels.length) {
                         gameState.currentLevel++;
                         gameState.moves = 0;
-                        gameState.placedMirrors = [];
-                        renderBoard();
-                        updateDisplay();
+                        gameState.hitTargets.clear();
+                        setupCanvas();
+                        renderGame();
                         levelComplete.classList.remove('show');
                         
                         if (gameState.autoLaser) {
-                            calculateAndDrawLaser();
+                            calculateAndDrawLasers();
                         }
                     } else {
                         levelComplete.classList.remove('show');
@@ -1051,14 +975,22 @@
                 
                 playAgainBtn.addEventListener('click', function() {
                     gameState.moves = 0;
-                    gameState.placedMirrors = [];
-                    renderBoard();
-                    updateDisplay();
+                    gameState.hitTargets.clear();
+                    // Reset mirrors to original positions
+                    const level = gameState.levels[gameState.currentLevel - 1];
+                    level.mirrors.forEach(mirror => {
+                        if (mirror.originalX !== undefined) {
+                            mirror.x = mirror.originalX;
+                            mirror.y = mirror.originalY;
+                        }
+                    });
+                    renderGame();
                     levelComplete.classList.remove('show');
                     
                     if (gameState.autoLaser) {
-                        calculateAndDrawLaser();
+                        calculateAndDrawLasers();
                     }
+                    updateDisplay();
                 });
                 
                 mirrorOptions.forEach(option => {
@@ -1069,34 +1001,154 @@
                     });
                 });
                 
-                // Allow adding new mirrors by clicking on empty cells
-                gameBoard.addEventListener('click', function(e) {
-                    const cell = e.target.closest('.cell');
-                    if (!cell || cell.querySelector('[data-mirror="true"]') || 
-                        cell.querySelector('.laser-source') || cell.querySelector('.target')) return;
-                    
-                    const row = parseInt(cell.dataset.row);
-                    const col = parseInt(cell.dataset.col);
-                    
-                    // Check if we've reached the mirror limit
-                    const level = gameState.levels[gameState.currentLevel - 1];
-                    if (gameState.placedMirrors.length >= level.movableMirrors) return;
-                    
-                    gameState.placedMirrors.push({
-                        row: row,
-                        col: col,
-                        type: gameState.selectedMirrorType
-                    });
-                    
-                    gameState.moves++;
-                    renderBoard();
-                    updateDisplay();
-                    
-                    // Auto-update laser if enabled
+                // Handle window resize
+                window.addEventListener('resize', function() {
+                    setupCanvas();
+                    renderGame();
                     if (gameState.autoLaser) {
-                        calculateAndDrawLaser();
+                        calculateAndDrawLasers();
                     }
                 });
+                
+                // Initialize original mirror positions
+                gameState.levels.forEach(level => {
+                    level.mirrors.forEach(mirror => {
+                        if (mirror.movable) {
+                            mirror.originalX = mirror.x;
+                            mirror.originalY = mirror.y;
+                        }
+                    });
+                });
+                
+                // Add drag and drop functionality for mirrors
+                setupDragAndDrop();
+            }
+
+            // Set up drag and drop for mirrors
+            function setupDragAndDrop() {
+                let draggedMirror = null;
+                let dragOffsetX = 0;
+                let dragOffsetY = 0;
+                
+                canvas.addEventListener('mousedown', handleMouseDown);
+                canvas.addEventListener('mousemove', handleMouseMove);
+                canvas.addEventListener('mouseup', handleMouseUp);
+                
+                // Touch events for mobile
+                canvas.addEventListener('touchstart', handleTouchStart);
+                canvas.addEventListener('touchmove', handleTouchMove);
+                canvas.addEventListener('touchend', handleTouchEnd);
+                
+                function handleMouseDown(e) {
+                    const rect = canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    startDrag(x, y);
+                }
+                
+                function handleMouseMove(e) {
+                    if (!draggedMirror) return;
+                    
+                    const rect = canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    updateDrag(x, y);
+                }
+                
+                function handleMouseUp() {
+                    endDrag();
+                }
+                
+                function handleTouchStart(e) {
+                    e.preventDefault();
+                    const rect = canvas.getBoundingClientRect();
+                    const touch = e.touches[0];
+                    const x = touch.clientX - rect.left;
+                    const y = touch.clientY - rect.top;
+                    
+                    startDrag(x, y);
+                }
+                
+                function handleTouchMove(e) {
+                    e.preventDefault();
+                    if (!draggedMirror) return;
+                    
+                    const rect = canvas.getBoundingClientRect();
+                    const touch = e.touches[0];
+                    const x = touch.clientX - rect.left;
+                    const y = touch.clientY - rect.top;
+                    
+                    updateDrag(x, y);
+                }
+                
+                function handleTouchEnd() {
+                    endDrag();
+                }
+                
+                function startDrag(x, y) {
+                    const level = gameState.levels[gameState.currentLevel - 1];
+                    const cellSize = gameState.cellSize;
+                    
+                    // Find if a mirror was clicked
+                    for (const mirror of level.mirrors) {
+                        if (!mirror.movable) continue;
+                        
+                        const mirrorX = mirror.x * cellSize;
+                        const mirrorY = mirror.y * cellSize;
+                        
+                        if (x >= mirrorX && x < mirrorX + cellSize &&
+                            y >= mirrorY && y < mirrorY + cellSize) {
+                            
+                            draggedMirror = mirror;
+                            dragOffsetX = x - mirrorX;
+                            dragOffsetY = y - mirrorY;
+                            break;
+                        }
+                    }
+                }
+                
+                function updateDrag(x, y) {
+                    if (!draggedMirror) return;
+                    
+                    const cellSize = gameState.cellSize;
+                    const level = gameState.levels[gameState.currentLevel - 1];
+                    
+                    // Calculate new cell position
+                    const newX = Math.floor((x - dragOffsetX) / cellSize);
+                    const newY = Math.floor((y - dragOffsetY) / cellSize);
+                    
+                    // Check if the new position is valid
+                    if (newX >= 0 && newX < level.gridSize && 
+                        newY >= 0 && newY < level.gridSize) {
+                        
+                        // Check if cell is empty (no blocker, target, or other mirror)
+                        const hasBlocker = level.blockers.some(b => b.x === newX && b.y === newY);
+                        const hasTarget = level.targets.some(t => t.x === newX && t.y === newY);
+                        const hasOtherMirror = level.mirrors.some(m => 
+                            m !== draggedMirror && m.x === newX && m.y === newY);
+                        
+                        if (!hasBlocker && !hasTarget && !hasOtherMirror) {
+                            draggedMirror.x = newX;
+                            draggedMirror.y = newY;
+                            
+                            // Update display
+                            renderGame();
+                            if (gameState.autoLaser) {
+                                calculateAndDrawLasers();
+                            }
+                        }
+                    }
+                }
+                
+                function endDrag() {
+                    if (draggedMirror) {
+                        gameState.moves++;
+                        updateDisplay();
+                        draggedMirror = null;
+                    }
+                }
             }
 
             // Start the game
