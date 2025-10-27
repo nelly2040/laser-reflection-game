@@ -285,6 +285,7 @@
             height: 10px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
         }
         
         .level-dot.active {
@@ -400,74 +401,203 @@
                 levels: [
                     {
                         // Level 1 - Basic mirror reflection
+                        name: "Getting Started",
                         lasers: [{ x: 0, y: 3, direction: 'right' }],
                         targets: [{ x: 6, y: 3 }],
                         objects: [
-                            { x: 3, y: 3, type: 'mirror-forward', movable: true, rotation: 0 }
+                            { x: 3, y: 3, type: 'mirror-forward', movable: true }
                         ],
                         gridSize: 7
                     },
                     {
                         // Level 2 - Two mirrors
+                        name: "Double Reflection",
                         lasers: [{ x: 0, y: 1, direction: 'right' }],
                         targets: [{ x: 6, y: 5 }],
                         objects: [
-                            { x: 2, y: 1, type: 'mirror-forward', movable: true, rotation: 0 },
-                            { x: 4, y: 3, type: 'mirror-backward', movable: true, rotation: 0 }
+                            { x: 2, y: 1, type: 'mirror-forward', movable: true },
+                            { x: 4, y: 3, type: 'mirror-backward', movable: true }
                         ],
                         gridSize: 7
                     },
                     {
-                        // Level 3 - Beam splitter
+                        // Level 3 - Beam splitter introduction
+                        name: "Beam Division",
                         lasers: [{ x: 0, y: 3, direction: 'right' }],
                         targets: [{ x: 6, y: 1 }, { x: 6, y: 5 }],
                         objects: [
-                            { x: 3, y: 3, type: 'splitter', movable: true, rotation: 0 }
+                            { x: 3, y: 3, type: 'splitter', movable: true }
                         ],
                         gridSize: 7
                     },
                     {
                         // Level 4 - Blockers and mirrors
+                        name: "Obstacle Course",
                         lasers: [{ x: 0, y: 3, direction: 'right' }],
                         targets: [{ x: 6, y: 3 }],
                         objects: [
                             { x: 2, y: 2, type: 'blocker', movable: false },
                             { x: 2, y: 4, type: 'blocker', movable: false },
-                            { x: 4, y: 2, type: 'mirror-forward', movable: true, rotation: 0 },
-                            { x: 4, y: 4, type: 'mirror-backward', movable: true, rotation: 0 }
+                            { x: 4, y: 2, type: 'mirror-forward', movable: true },
+                            { x: 4, y: 4, type: 'mirror-backward', movable: true }
                         ],
                         gridSize: 7
                     },
                     {
-                        // Level 5 - Complex splitter path
-                        lasers: [{ x: 3, y: 0, direction: 'down' }],
-                        targets: [{ x: 0, y: 6 }, { x: 3, y: 6 }, { x: 6, y: 6 }],
-                        objects: [
-                            { x: 1, y: 2, type: 'mirror-forward', movable: true, rotation: 0 },
-                            { x: 5, y: 2, type: 'mirror-backward', movable: true, rotation: 0 },
-                            { x: 3, y: 4, type: 'splitter', movable: true, rotation: 0 }
-                        ],
-                        gridSize: 7
-                    },
-                    {
-                        // Level 6 - Ultimate challenge
+                        // Level 5 - Complex splitter path (FIXED)
+                        name: "Split Decision",
                         lasers: [
-                            { x: 0, y: 0, direction: 'right' },
-                            { x: 6, y: 0, direction: 'down' }
+                            { x: 0, y: 3, direction: 'right' },
+                            { x: 6, y: 3, direction: 'left' }
                         ],
                         targets: [
-                            { x: 0, y: 6 }, { x: 3, y: 3 }, 
-                            { x: 6, y: 6 }, { x: 3, y: 0 }
+                            { x: 0, y: 6 }, 
+                            { x: 3, y: 6 }, 
+                            { x: 6, y: 6 },
+                            { x: 3, y: 0 }
                         ],
                         objects: [
-                            { x: 2, y: 2, type: 'mirror-forward', movable: true, rotation: 0 },
-                            { x: 4, y: 2, type: 'mirror-backward', movable: true, rotation: 0 },
-                            { x: 2, y: 4, type: 'mirror-backward', movable: true, rotation: 0 },
-                            { x: 4, y: 4, type: 'mirror-forward', movable: true, rotation: 0 },
-                            { x: 1, y: 1, type: 'blocker', movable: false },
-                            { x: 5, y: 1, type: 'blocker', movable: false },
-                            { x: 1, y: 5, type: 'blocker', movable: false },
-                            { x: 5, y: 5, type: 'blocker', movable: false }
+                            { x: 2, y: 2, type: 'mirror-forward', movable: true },
+                            { x: 4, y: 2, type: 'mirror-backward', movable: true },
+                            { x: 2, y: 4, type: 'splitter', movable: true },
+                            { x: 4, y: 4, type: 'splitter', movable: true }
+                        ],
+                        blockers: [
+                            { x: 1, y: 1 }, { x: 5, y: 1 }
+                        ],
+                        gridSize: 7
+                    },
+                    {
+                        // Level 6 - Multiple lasers
+                        name: "Dual Beams",
+                        lasers: [
+                            { x: 0, y: 1, direction: 'right' },
+                            { x: 0, y: 5, direction: 'right' }
+                        ],
+                        targets: [
+                            { x: 6, y: 1 }, 
+                            { x: 6, y: 5 },
+                            { x: 3, y: 3 }
+                        ],
+                        objects: [
+                            { x: 2, y: 1, type: 'mirror-forward', movable: true },
+                            { x: 2, y: 5, type: 'mirror-backward', movable: true },
+                            { x: 4, y: 3, type: 'splitter', movable: true }
+                        ],
+                        blockers: [
+                            { x: 3, y: 1 }, { x: 3, y: 5 }
+                        ],
+                        gridSize: 7
+                    },
+                    {
+                        // Level 7 - Advanced splitter network
+                        name: "Splitter Network",
+                        lasers: [{ x: 3, y: 0, direction: 'down' }],
+                        targets: [
+                            { x: 0, y: 3 }, 
+                            { x: 3, y: 6 },
+                            { x: 6, y: 3 },
+                            { x: 0, y: 6 },
+                            { x: 6, y: 6 }
+                        ],
+                        objects: [
+                            { x: 1, y: 2, type: 'mirror-forward', movable: true },
+                            { x: 5, y: 2, type: 'mirror-backward', movable: true },
+                            { x: 3, y: 3, type: 'splitter', movable: true },
+                            { x: 1, y: 4, type: 'splitter', movable: true },
+                            { x: 5, y: 4, type: 'splitter', movable: true }
+                        ],
+                        blockers: [
+                            { x: 2, y: 2 }, { x: 4, y: 2 }, { x: 2, y: 4 }, { x: 4, y: 4 }
+                        ],
+                        gridSize: 7
+                    },
+                    {
+                        // Level 8 - Complex maze
+                        name: "Laser Maze",
+                        lasers: [{ x: 0, y: 0, direction: 'right' }],
+                        targets: [
+                            { x: 6, y: 0 }, 
+                            { x: 6, y: 6 },
+                            { x: 0, y: 6 }
+                        ],
+                        objects: [
+                            { x: 2, y: 0, type: 'mirror-forward', movable: true },
+                            { x: 4, y: 0, type: 'mirror-backward', movable: true },
+                            { x: 6, y: 2, type: 'mirror-forward', movable: true },
+                            { x: 4, y: 4, type: 'splitter', movable: true },
+                            { x: 2, y: 6, type: 'mirror-backward', movable: true },
+                            { x: 0, y: 4, type: 'splitter', movable: true }
+                        ],
+                        blockers: [
+                            { x: 1, y: 1 }, { x: 3, y: 1 }, { x: 5, y: 1 },
+                            { x: 1, y: 3 }, { x: 3, y: 3 }, { x: 5, y: 3 },
+                            { x: 1, y: 5 }, { x: 3, y: 5 }, { x: 5, y: 5 }
+                        ],
+                        gridSize: 7
+                    },
+                    {
+                        // Level 9 - Ultimate challenge
+                        name: "Master Challenge",
+                        lasers: [
+                            { x: 0, y: 0, direction: 'right' },
+                            { x: 6, y: 0, direction: 'down' },
+                            { x: 6, y: 6, direction: 'left' },
+                            { x: 0, y: 6, direction: 'up' }
+                        ],
+                        targets: [
+                            { x: 2, y: 2 }, 
+                            { x: 4, y: 2 },
+                            { x: 2, y: 4 },
+                            { x: 4, y: 4 },
+                            { x: 3, y: 3 }
+                        ],
+                        objects: [
+                            { x: 1, y: 1, type: 'mirror-forward', movable: true },
+                            { x: 5, y: 1, type: 'mirror-backward', movable: true },
+                            { x: 1, y: 5, type: 'mirror-backward', movable: true },
+                            { x: 5, y: 5, type: 'mirror-forward', movable: true },
+                            { x: 3, y: 1, type: 'splitter', movable: true },
+                            { x: 3, y: 5, type: 'splitter', movable: true },
+                            { x: 1, y: 3, type: 'splitter', movable: true },
+                            { x: 5, y: 3, type: 'splitter', movable: true }
+                        ],
+                        blockers: [
+                            { x: 0, y: 3 }, { x: 6, y: 3 }, { x: 3, y: 0 }, { x: 3, y: 6 }
+                        ],
+                        gridSize: 7
+                    },
+                    {
+                        // Level 10 - Final boss level
+                        name: "The Grand Finale",
+                        lasers: [
+                            { x: 1, y: 0, direction: 'down' },
+                            { x: 5, y: 0, direction: 'down' },
+                            { x: 0, y: 3, direction: 'right' },
+                            { x: 6, y: 3, direction: 'left' }
+                        ],
+                        targets: [
+                            { x: 0, y: 0 }, 
+                            { x: 6, y: 0 },
+                            { x: 0, y: 6 },
+                            { x: 6, y: 6 },
+                            { x: 3, y: 3 },
+                            { x: 1, y: 1 },
+                            { x: 5, y: 1 },
+                            { x: 1, y: 5 },
+                            { x: 5, y: 5 }
+                        ],
+                        objects: [
+                            { x: 2, y: 1, type: 'mirror-forward', movable: true },
+                            { x: 4, y: 1, type: 'mirror-backward', movable: true },
+                            { x: 2, y: 5, type: 'mirror-backward', movable: true },
+                            { x: 4, y: 5, type: 'mirror-forward', movable: true },
+                            { x: 1, y: 2, type: 'splitter', movable: true },
+                            { x: 5, y: 2, type: 'splitter', movable: true },
+                            { x: 1, y: 4, type: 'splitter', movable: true },
+                            { x: 5, y: 4, type: 'splitter', movable: true },
+                            { x: 3, y: 1, type: 'blocker', movable: false },
+                            { x: 3, y: 5, type: 'blocker', movable: false }
                         ],
                         gridSize: 7
                     }
@@ -591,69 +721,99 @@
                 const level = gameState.levels[gameState.currentLevel - 1];
                 const size = gameState.cellSize;
                 
+                // Draw blockers first (background objects)
                 level.objects.forEach(obj => {
-                    const x = obj.x * size;
-                    const y = obj.y * size;
-                    
-                    // Object background
-                    ctx.fillStyle = obj.movable ? 'rgba(100, 150, 255, 0.7)' : 'rgba(150, 100, 255, 0.7)';
-                    ctx.fillRect(x, y, size, size);
-                    
-                    // Object border
-                    ctx.strokeStyle = obj.movable ? 'rgba(80, 130, 255, 0.9)' : 'rgba(130, 80, 255, 0.9)';
-                    ctx.lineWidth = 2;
-                    ctx.strokeRect(x, y, size, size);
-                    
-                    // Draw object based on type
-                    ctx.fillStyle = 'white';
-                    ctx.strokeStyle = 'white';
-                    ctx.lineWidth = 3;
-                    
-                    switch(obj.type) {
-                        case 'mirror-forward':
-                            // Forward slash (/)
-                            ctx.beginPath();
-                            ctx.moveTo(x + size - 5, y + 5);
-                            ctx.lineTo(x + 5, y + size - 5);
-                            ctx.stroke();
-                            break;
-                            
-                        case 'mirror-backward':
-                            // Backward slash (\)
-                            ctx.beginPath();
-                            ctx.moveTo(x + 5, y + 5);
-                            ctx.lineTo(x + size - 5, y + size - 5);
-                            ctx.stroke();
-                            break;
-                            
-                        case 'splitter':
-                            // Beam splitter (+)
-                            ctx.beginPath();
-                            // Horizontal line
-                            ctx.moveTo(x + 5, y + size/2);
-                            ctx.lineTo(x + size - 5, y + size/2);
-                            // Vertical line
-                            ctx.moveTo(x + size/2, y + 5);
-                            ctx.lineTo(x + size/2, y + size - 5);
-                            ctx.stroke();
-                            
-                            // Center dot
-                            ctx.beginPath();
-                            ctx.arc(x + size/2, y + size/2, 3, 0, Math.PI * 2);
-                            ctx.fill();
-                            break;
-                            
-                        case 'blocker':
-                            // Blocker (X)
-                            ctx.beginPath();
-                            ctx.moveTo(x + 5, y + 5);
-                            ctx.lineTo(x + size - 5, y + size - 5);
-                            ctx.moveTo(x + size - 5, y + 5);
-                            ctx.lineTo(x + 5, y + size - 5);
-                            ctx.stroke();
-                            break;
+                    if (obj.type === 'blocker') {
+                        drawBlocker(obj, size);
                     }
                 });
+                
+                // Draw other objects
+                level.objects.forEach(obj => {
+                    if (obj.type !== 'blocker') {
+                        drawInteractiveObject(obj, size);
+                    }
+                });
+            }
+
+            // Draw blocker
+            function drawBlocker(obj, size) {
+                const x = obj.x * size;
+                const y = obj.y * size;
+                
+                // Blocker background
+                ctx.fillStyle = 'rgba(80, 80, 120, 0.9)';
+                ctx.fillRect(x, y, size, size);
+                
+                // Blocker border
+                ctx.strokeStyle = 'rgba(60, 60, 100, 0.9)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x, y, size, size);
+                
+                // Blocker X
+                ctx.strokeStyle = 'rgba(40, 40, 80, 0.9)';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(x + 5, y + 5);
+                ctx.lineTo(x + size - 5, y + size - 5);
+                ctx.moveTo(x + size - 5, y + 5);
+                ctx.lineTo(x + 5, y + size - 5);
+                ctx.stroke();
+            }
+
+            // Draw interactive object (mirror or splitter)
+            function drawInteractiveObject(obj, size) {
+                const x = obj.x * size;
+                const y = obj.y * size;
+                
+                // Object background
+                ctx.fillStyle = obj.movable ? 'rgba(100, 150, 255, 0.7)' : 'rgba(150, 100, 255, 0.7)';
+                ctx.fillRect(x, y, size, size);
+                
+                // Object border
+                ctx.strokeStyle = obj.movable ? 'rgba(80, 130, 255, 0.9)' : 'rgba(130, 80, 255, 0.9)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x, y, size, size);
+                
+                // Draw object based on type
+                ctx.fillStyle = 'white';
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 3;
+                
+                switch(obj.type) {
+                    case 'mirror-forward':
+                        // Forward slash (/)
+                        ctx.beginPath();
+                        ctx.moveTo(x + size - 5, y + 5);
+                        ctx.lineTo(x + 5, y + size - 5);
+                        ctx.stroke();
+                        break;
+                        
+                    case 'mirror-backward':
+                        // Backward slash (\)
+                        ctx.beginPath();
+                        ctx.moveTo(x + 5, y + 5);
+                        ctx.lineTo(x + size - 5, y + size - 5);
+                        ctx.stroke();
+                        break;
+                        
+                    case 'splitter':
+                        // Beam splitter (+)
+                        ctx.beginPath();
+                        // Horizontal line
+                        ctx.moveTo(x + 5, y + size/2);
+                        ctx.lineTo(x + size - 5, y + size/2);
+                        // Vertical line
+                        ctx.moveTo(x + size/2, y + 5);
+                        ctx.lineTo(x + size/2, y + size - 5);
+                        ctx.stroke();
+                        
+                        // Center dot
+                        ctx.beginPath();
+                        ctx.arc(x + size/2, y + size/2, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+                }
             }
 
             // Draw targets
@@ -904,7 +1064,7 @@
             function updateDisplay() {
                 const level = gameState.levels[gameState.currentLevel - 1];
                 levelDisplay.textContent = gameState.currentLevel;
-                levelTitle.textContent = gameState.currentLevel;
+                levelTitle.textContent = `${gameState.currentLevel}: ${level.name}`;
                 
                 targetsDisplay.textContent = `${gameState.hitTargets.size}/${level.targets.length}`;
                 movesDisplay.textContent = gameState.moves;
@@ -942,7 +1102,6 @@
                         if (obj.originalX !== undefined) {
                             obj.x = obj.originalX;
                             obj.y = obj.originalY;
-                            obj.rotation = 0;
                         }
                     });
                     renderGame();
@@ -1010,7 +1169,6 @@
                         if (obj.originalX !== undefined) {
                             obj.x = obj.originalX;
                             obj.y = obj.originalY;
-                            obj.rotation = 0;
                         }
                     });
                     renderGame();
